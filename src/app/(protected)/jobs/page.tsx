@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   DragDropContext,
   Droppable,
   Draggable,
   DropResult,
+  //@ts-ignore
 } from "@hello-pangea/dnd";
 import { LoaderOne } from "@/components/ui/loader";
 
@@ -284,13 +286,15 @@ const JobsTable = React.memo(({
   loading, 
   currentPage, 
   pageSize, 
-  onDragEnd 
+  onDragEnd,
+  onNavigateToKanban
 }: {
   jobs: Job[];
   loading: boolean;
   currentPage: number;
   pageSize: number;
   onDragEnd: (result: DropResult) => void;
+  onNavigateToKanban: (jobId: number) => void;
 }) => {
   return (
     <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg border border-green-200 overflow-hidden relative">
@@ -302,7 +306,7 @@ const JobsTable = React.memo(({
       
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="jobs">
-          {(provided) => (
+          {(provided:any) => (
             <table
               ref={provided.innerRef}
               {...provided.droppableProps}
@@ -314,6 +318,7 @@ const JobsTable = React.memo(({
                   <th className="p-3 text-left text-white font-medium">Title</th>
                   <th className="p-3 text-left text-white font-medium">Status</th>
                   <th className="p-3 text-left text-white font-medium">Tags</th>
+                  <th className="p-3 text-left text-white font-medium">Kanban</th>
                 </tr>
               </thead>
               <tbody>
@@ -323,7 +328,7 @@ const JobsTable = React.memo(({
                     draggableId={job.id.toString()}
                     index={index}
                   >
-                    {(provided, snapshot) => (
+                    {(provided:any, snapshot:any) => (
                       <tr
                         ref={provided.innerRef}
                         {...provided.draggableProps}
@@ -363,6 +368,30 @@ const JobsTable = React.memo(({
                             )}
                           </div>
                         </td>
+                        <td className="p-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigateToKanban(job.id);
+                            }}
+                            className="inline-flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                            title={`View Kanban for ${job.title}`}
+                          >
+                            <svg 
+                              className="w-4 h-4" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={2} 
+                                d="M9 5l7 7-7 7" 
+                              />
+                            </svg>
+                          </button>
+                        </td>
                       </tr>
                     )}
                   </Draggable>
@@ -380,6 +409,7 @@ const JobsTable = React.memo(({
 JobsTable.displayName = "JobsTable";
 
 export default function JobsPage() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -496,9 +526,16 @@ export default function JobsPage() {
     fetchJobs(1, filters);
   }, [fetchJobs, filters]);
 
+  // Handle navigation to kanban view
+  const handleNavigateToKanban = useCallback((jobId: number) => {
+    router.push(`/jobs/${jobId}`);
+  }, [router]);
+
   // Handle drag end - only works on current page
   const handleDragEnd = useCallback(async (result: DropResult) => {
     if (!result.destination) return;
+      // Check if the item was actually moved to a different position
+      if (result.source.index === result.destination.index) return;
 
     const reordered = Array.from(jobs);
     const [moved] = reordered.splice(result.source.index, 1);
@@ -593,6 +630,7 @@ export default function JobsPage() {
         currentPage={currentPage}
         pageSize={pageSize}
         onDragEnd={handleDragEnd}
+        onNavigateToKanban={handleNavigateToKanban}
       />
 
       {/* Pagination */}

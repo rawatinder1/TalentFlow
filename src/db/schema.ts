@@ -1,4 +1,4 @@
-import Dexie, { Table } from "dexie/dist/dexie"
+import Dexie, { Table } from "dexie"
 
 // Define Job type
 export interface Job {
@@ -21,7 +21,6 @@ export interface Candidate {
   stage: "applied" | "screen" | "tech" | "offer" | "hired" | "rejected";
 }
 
-// Define Assessment type
 export interface Assessment {
   id?: number;
   jobId: number;
@@ -32,7 +31,7 @@ export interface Assessment {
   }[];
 }
 
-// Create Dexie DB
+//  Dexie DB
 export class TalentFlowDB extends Dexie {
   jobs!: Table<Job, number>;
   candidates!: Table<Candidate, number>;
@@ -49,5 +48,4 @@ export class TalentFlowDB extends Dexie {
   }
 }
 
-// Export instance
 export const db = new TalentFlowDB();
