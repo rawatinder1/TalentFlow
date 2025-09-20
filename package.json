@@ -11,6 +11,7 @@
   "dependencies": {
     "@faker-js/faker": "^10.0.0",
     "@hello-pangea/dnd": "^18.0.1",
+    "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@tabler/icons-react": "^3.35.0",
     "@tsparticles/engine": "^3.9.1",
@@ -21,7 +22,7 @@
     "dexie": "^4.2.0",
     "konva": "^10.0.2",
     "lucide-react": "^0.544.0",
-    "motion": "^12.23.13",
+    "motion": "^12.23.16",
     "msw": "^2.11.2",
     "next": "15.5.3",
     "react": "19.1.0",

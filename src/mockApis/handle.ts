@@ -1,6 +1,12 @@
 import { http, HttpResponse, PathParams } from "msw";
 import { db, Job } from "@/db/schema";
-
+interface Candidate {
+  id?: number;
+  name: string;
+  email: string;
+  jobId: number;
+  stage: "applied" | "screen" | "tech" | "offer" | "hired" | "rejected";
+}
 // Types for pagination and filtering
 interface PaginationResponse<T> {
   data: T[];
@@ -89,7 +95,7 @@ export const handlers = [
     try {
       const url = new URL(request.url);
       
-      // Parse query parameters
+      // this will Parse query parameters
       const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
       const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '10')));
       const status = url.searchParams.get('status') || undefined;
@@ -99,19 +105,19 @@ export const handlers = [
       const sortBy = url.searchParams.get('sortBy') || 'order';
       const sortOrder = url.searchParams.get('sortOrder') || 'asc';
 
-      // Fetch all jobs from database
+      // this will fetch all jobs from database
       const allJobs = await db.jobs.toArray();
 
-      // Apply filters
+      // server side filtering
       const filters: JobFilters = { status, search, tags };
       const filteredJobs = applyFilters(allJobs, filters);
 
-      // Apply sorting
+      
       const sortedJobs = [...filteredJobs].sort((a, b) => {
         let aValue: any = a[sortBy as keyof Job];
         let bValue: any = b[sortBy as keyof Job];
 
-        // Handle different data types
+        
         if (typeof aValue === 'string') {
           aValue = aValue.toLowerCase();
           bValue = bValue.toLowerCase();
@@ -274,4 +280,61 @@ export const handlers = [
       return errorResponse("Failed to delete job", 500);
     }
   }),
+    //candidates Handler begin from here
+    // routes from here are related to fetching candidates info and patching data for candidates like when moving them to different stages of a job.
+
+    http.get('/candidates', async ({ request }) => {
+      try {
+        // Get URL search params for pagination
+        const url = new URL(request.url);
+        const page = parseInt(url.searchParams.get('page') || '1') || 1;
+        const limit = parseInt(url.searchParams.get('limit') !) || 25;
+        const stage = url.searchParams.get('stage') || '';
+
+        // Fetch all candidates from the Dexie database
+        let candidates = await db.candidates.toArray();
+
+        // Apply search filter if provided
+        if (stage) {
+          candidates = candidates.filter((candidate: Candidate) =>
+            candidate.stage.toLowerCase().includes(stage.toLowerCase())
+          );
+        }
+
+        // Calculate pagination
+        const total = candidates.length;
+        const totalPages = Math.ceil(total / limit);
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        
+        // Get paginated results
+        const paginatedCandidates = candidates.slice(startIndex, endIndex);
+        
+        // Simulate network delay (corrected syntax)
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        return HttpResponse.json({
+          data: paginatedCandidates,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching candidates from IndexedDB:', error);
+        
+        return HttpResponse.json(
+          { error: 'Failed to fetch candidates' },
+          { status: 500 }
+        );
+      }
+    })
+
+
+
+
 ];
