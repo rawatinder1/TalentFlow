@@ -60,27 +60,26 @@ export default function KanbanBoard() {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>): void => {
     e.preventDefault();
     
-    // Temporarily disable auto-scroll for debugging
-    // if (!isDragging || !scrollContainerRef.current) return;
+    if (!isDragging || !scrollContainerRef.current) return;
 
-    // const container = scrollContainerRef.current;
-    // const rect = container.getBoundingClientRect();
-    // const scrollThreshold = 100;
-    // const scrollSpeed = 10;
+    const container = scrollContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const scrollThreshold = 100;
+    const scrollSpeed = 10;
 
-    // const mouseX = e.clientX - rect.left;
-    // const containerWidth = rect.width;
+    const mouseX = e.clientX - rect.left;
+    const containerWidth = rect.width;
 
-    // if (mouseX > containerWidth - scrollThreshold && 
-    //     container.scrollLeft < container.scrollWidth - container.clientWidth) {
-    //   startAutoScroll('right', scrollSpeed);
-    // }
-    // else if (mouseX < scrollThreshold && container.scrollLeft > 0) {
-    //   startAutoScroll('left', scrollSpeed);
-    // }
-    // else {
-    //   stopAutoScroll();
-    // }
+    if (mouseX > containerWidth - scrollThreshold && 
+        container.scrollLeft < container.scrollWidth - container.clientWidth) {
+      startAutoScroll('right', scrollSpeed);
+    }
+    else if (mouseX < scrollThreshold && container.scrollLeft > 0) {
+      startAutoScroll('left', scrollSpeed);
+    }
+    else {
+      stopAutoScroll();
+    }
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, targetColumnId: number): Promise<void> => {
