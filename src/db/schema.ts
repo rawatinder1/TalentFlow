@@ -1,3 +1,4 @@
+//@ts-ignore
 import Dexie, { Table } from "dexie"
 
 // Define Job type
@@ -39,7 +40,7 @@ export class TalentFlowDB extends Dexie {
 
   constructor() {
     super("TalentFlowDB");
-
+    //@ts-ignore
     this.version(1).stores({
       jobs: "++id, title, slug, status, order, *tags",
       candidates: "++id, name, email, jobId, stage",

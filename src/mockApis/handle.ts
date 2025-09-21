@@ -30,6 +30,16 @@ interface JobParams extends PathParams {
   id: string;
 }
 
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+
 // Helper function to apply filters
 const applyFilters = (jobs: Job[], filters: JobFilters): Job[] => {
   let filtered = [...jobs];
@@ -182,7 +192,8 @@ export const handlers = [
 
   // POST /jobs → create a new job (unchanged)
   //@ts-ignore
-  http.post("/jobs", async ({ request }): Promise<HttpResponse> => {
+    // POST /jobs - create new job
+      http.post("/jobs", async ({ request }): Promise<HttpResponse> => {
     try {
       let jobData: Partial<Job>;
       
@@ -192,24 +203,46 @@ export const handlers = [
         return errorResponse("Invalid JSON payload", 400);
       }
 
-      if (!jobData.title || !jobData.slug) {
-        return errorResponse("Missing required fields: title and slug", 400);
+      // Validation - title is required
+      if (!jobData.title?.trim()) {
+        return errorResponse("Title is required", 400);
       }
 
+      // Auto-generate slug if not provided
+      const slug = jobData.slug?.trim() || generateSlug(jobData.title);
+      
+      // Check for unique slug
+      const existingJob = await db.jobs.where('slug').equals(slug).first();
+      if (existingJob) {
+        return errorResponse("Slug must be unique", 400);
+      }
+
+      // Get highest order number and increment
+      const maxOrderJob = await db.jobs.orderBy('order').reverse().first();
+      const maxOrder = maxOrderJob ? maxOrderJob.order : 0;
+
       const newJobData: Omit<Job, 'id'> = {
-        ...jobData as Omit<Job, 'id'>,
+        title: jobData.title.trim(),
+        slug,
+        status: jobData.status || "active",
+        tags: jobData.tags || [],
+        order: maxOrder + 1,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const id = await db.jobs.add(newJobData);
       const newJob = await db.jobs.get(id);
-
+      
       if (!newJob) {
         return errorResponse("Failed to retrieve created job", 500);
       }
 
-      return successResponse<Job>(newJob, 201);
+      return successResponse(newJob, 201);
+      
     } catch (error) {
       console.error("Failed to create job:", error);
       return errorResponse("Failed to create job", 500);
