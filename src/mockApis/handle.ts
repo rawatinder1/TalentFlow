@@ -391,8 +391,8 @@ export const handlers = [
     }),
     http.patch<{ id: string }>("/candidates/:id", async ({ params, request }) => {
   try {
-    const id = Number(params.id)
-    if (isNaN(id)) {
+    const id = params.id
+    if (!id) {
       return errorResponse("Invalid candidate ID", 400)
     }
 
@@ -408,6 +408,7 @@ export const handlers = [
     }
 
     const updated = await db.candidates.get(id)
+    console.log("succesfully reached here:",updated)
     return successResponse(updated)
   } catch (error) {
     console.error("Failed to update candidate:", error)
