@@ -414,7 +414,49 @@ export const handlers = [
     console.error("Failed to update candidate:", error)
     return errorResponse("Failed to update candidate", 500)
   }
-}),
+}),// POST /candidates → add new candidate
+ http.post("/candidates", async ({ request }) => {
+  try {
+    const body = (await request.json()) as Candidate
+
+    // Validate
+    if (!body.name?.trim()) {
+      return errorResponse("Name is required", 400)
+    }
+    if (!body.email?.trim()) {
+      return errorResponse("Email is required", 400)
+    }
+    if (!body.jobId) {
+      return errorResponse("jobId is required", 400)
+    }
+    if (!body.stage) {
+      return errorResponse("Stage is required", 400)
+    }
+
+    const newCandidate: Omit<Candidate, "id"> = {
+      name: body.name.trim(),
+      email: body.email.trim(),
+      jobId: body.jobId,
+      stage: body.stage,
+    }
+
+    // Save to Dexie
+    const id = await db.candidates.add(newCandidate)
+    const savedCandidate = await db.candidates.get(id)
+
+    if (!savedCandidate) {
+      return errorResponse("Failed to create candidate", 500)
+    }
+
+    // Simulate API delay
+    await new Promise((res) => setTimeout(res, 400))
+    console.log("successfully reached the create candidate mock api",savedCandidate)
+    return successResponse(savedCandidate, 201)
+  } catch (error) {
+    console.error("Failed to create candidate:", error)
+    return errorResponse("Failed to create candidate", 500)
+  }
+})
 
 
 

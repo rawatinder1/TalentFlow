@@ -82,7 +82,7 @@ export function AppSidebar() {
             />
           </div>
           <motion.span
-            className="font-extrabold text-xl bg-gradient-to-r from-blue-600 via-blue-10 to-blue-400 bg-clip-text text-transparent"
+            className="font-extrabold text-xl bg-gradient-to-r from-blue-300 via-blue-10 to-blue-400 bg-clip-text text-transparent"
             initial={{ opacity: 0, scale: 0.8, letterSpacing: "-0.2em" }}
             animate={{
               opacity: isExpanded ? 1 : 0,

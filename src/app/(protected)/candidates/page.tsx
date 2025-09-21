@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 //@ts-ignore 
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import AddCandidateModal from './addCandidateModal';
 
 const CustomSelect = ({ 
   value, 
@@ -122,6 +123,7 @@ const CandidatesTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [pagination, setPagination] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const stageOptions = [
     { value: '', label: 'All Stages' },
@@ -143,6 +145,36 @@ const CandidatesTable = () => {
     candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     candidate.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleModalSuccess = () => {
+    // Refresh the candidates list after successful creation
+    const fetchCandidates = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: pageSize.toString(),
+          ...(selectedStage && { stage: selectedStage })
+        });
+        
+        const response = await fetch(`/candidates?${params}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch candidates');
+        }
+        
+        const result = await response.json();
+        setCandidates(result.data);
+        setPagination(result.pagination);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidates();
+  };
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -214,13 +246,21 @@ const CandidatesTable = () => {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Top Candidates</h1>
-                  <p className="text-gray-600 text-.5xl">Manage talent and track applications</p>
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight"> Candidates</h1>
+                  <p className="text-gray-600 text-sm">Manage talent and track applications</p>
                 </div>
               </div>
             </div>
             
-           
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="group bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-2xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Candidate
+            </button>
           </div>
           
           {/* Stats Cards */}
@@ -418,6 +458,13 @@ const CandidatesTable = () => {
             Showing {Math.min(pageSize, filteredCandidates.length)} of {pagination.total} candidates ({pageSize} per page)
           </div>
         )}
+
+        {/* Add Candidate Modal */}
+        <AddCandidateModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={handleModalSuccess}
+        />
       </div>
     </DndProvider>
   );
