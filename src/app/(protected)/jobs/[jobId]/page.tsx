@@ -1,7 +1,8 @@
 "use client"
 
-import React, { useState } from 'react';
-
+import React, { useState, useRef, useEffect } from 'react';
+import HelpModal from './modal';
+import { useParams } from 'next/navigation';
 interface Card {
   id: number;
   title: string;
@@ -23,76 +24,62 @@ interface DraggedCard {
   card: Card;
   sourceColumnId: number;
 }
+interface Candidate {
+  id: number
+  name: string
+  email: string
+  jobId: number
+  stage: "applied" | "screen" | "tech" | "offer" | "hired" | "rejected"
+}
 
-const initialBoard: Board = {
-  columns: [
-    {
-      id: 1,
-      title: "Applied",
-      backgroundColor: "#ffffff",
-      cards: [
-        { id: 1, title: "Card title 1", description: "Card content" },
-        { id: 2, title: "Card title 2", description: "Card content" },
-        { id: 3, title: "Card title 3", description: "Card content" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Screen",
-      backgroundColor: "#ffffff",
-      cards: [
-        { id: 9, title: "Card title 9", description: "Card content" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Tech",
-      backgroundColor: "#ffffff",
-      cards: [
-        { id: 10, title: "Card title 10", description: "Card content" },
-        { id: 11, title: "Card title 11", description: "Card content" }
-      ]
-    },
-    {
-      id: 4,
-      title: "Offer",
-      backgroundColor: "#ffffff",
-      cards: [
-        { id: 12, title: "Card title 12", description: "Card content" },
-        { id: 13, title: "Card title 13", description: "Card content" }
-      ]
-    },
-    {
-      id: 5,
-      title: "Hired",
-      backgroundColor: "#ffffff",
-      cards: [
-        { id: 14, title: "Card title 14", description: "Card content" },
-        { id: 15, title: "Card title 15", description: "Card content" }
-      ]
-    },
-    {
-      id: 6,
-      title: "Rejected",
-      backgroundColor: "#ffffff",
-      cards: [
-        { id: 16, title: "Card title 16", description: "Card content" },
-        { id: 17, title: "Card title 17", description: "Card content" }
-      ]
-    }
-  ]
-};
+const stages = [
+  { id: 1, title: "Applied", stage: "applied" },
+  { id: 2, title: "Screen", stage: "screen" },
+  { id: 3, title: "Tech", stage: "tech" },
+  { id: 4, title: "Offer", stage: "offer" },
+  { id: 5, title: "Hired", stage: "hired" },
+  { id: 6, title: "Rejected", stage: "rejected" },
+]
 
 export default function KanbanBoard() {
-  const [board, setBoard] = useState<Board>(initialBoard);
   const [draggedCard, setDraggedCard] = useState<DraggedCard | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [board, setBoard] = useState<Board>({ columns: [] })
+  const { jobId } = useParams()
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, card: Card, columnId: number): void => {
     setDraggedCard({ card, sourceColumnId: columnId });
+    setIsDragging(true);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>): void => {
     e.preventDefault();
+    
+    if (!isDragging || !scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const scrollThreshold = 100; // pixels from edge to trigger scroll
+    const scrollSpeed = 10; // pixels per scroll
+
+    const mouseX = e.clientX - rect.left;
+    const containerWidth = rect.width;
+
+    // Check if mouse is near the right edge and we can scroll right
+    if (mouseX > containerWidth - scrollThreshold && 
+        container.scrollLeft < container.scrollWidth - container.clientWidth) {
+      startAutoScroll('right', scrollSpeed);
+    }
+    // Check if mouse is near the left edge and we can scroll left
+    else if (mouseX < scrollThreshold && container.scrollLeft > 0) {
+      startAutoScroll('left', scrollSpeed);
+    }
+    // Stop scrolling if mouse is not near edges
+    else {
+      stopAutoScroll();
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetColumnId: number): void => {
@@ -100,6 +87,8 @@ export default function KanbanBoard() {
     
     if (!draggedCard || draggedCard.sourceColumnId === targetColumnId) {
       setDraggedCard(null);
+      setIsDragging(false);
+      stopAutoScroll();
       return;
     }
 
@@ -119,6 +108,35 @@ export default function KanbanBoard() {
 
     setBoard(newBoard);
     setDraggedCard(null);
+    setIsDragging(false);
+    stopAutoScroll();
+  };
+
+  const handleDragEnd = (): void => {
+    setIsDragging(false);
+    stopAutoScroll();
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>): void => {
+    // This function is no longer needed as we handle scrolling in dragOver
+  };
+
+  const startAutoScroll = (direction: 'left' | 'right', speed: number): void => {
+    if (scrollIntervalRef.current) return; // Already scrolling
+
+    scrollIntervalRef.current = setInterval(() => {
+      if (scrollContainerRef.current) {
+        const scrollAmount = direction === 'right' ? speed : -speed;
+        scrollContainerRef.current.scrollLeft += scrollAmount;
+      }
+    }, 16); // ~60fps
+  };
+
+  const stopAutoScroll = (): void => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
   };
 
   const removeCard = (columnId: number, cardId: number): void => {
@@ -130,14 +148,84 @@ export default function KanbanBoard() {
     
     setBoard(newBoard);
   };
+    useEffect(() => {
+    async function loadCandidates() {
+      const res = await fetch(`/jobs/${jobId}/candidates`)
+      const { data }: { data: Candidate[] } = await res.json()
+
+      // Build board dynamically
+      const cols: Column[] = stages.map((s) => ({
+        id: s.id,
+        title: s.title,
+        stage: s.stage,
+        backgroundColor: "#ffffff",
+        cards: data
+          .filter((c) => c.stage === s.stage)
+          .map((c) => ({
+            id: c.id,
+            title: c.name,
+            description: c.email, 
+          })),
+      }))
+
+      setBoard({ columns: cols })
+    }
+
+    if (jobId) {
+      loadCandidates()
+    }
+  }, [jobId])
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
-        Kanban Board
-      </h1>
-      
-      <div className="flex gap-6 overflow-x-auto pb-6">
+   
+<div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      {/* Help Modal - Top Left Corner */}
+      <div className="fixed top-4 light-5 z-40">
+        <HelpModal />
+      </div>
+
+      {/* Modern Header Section */}
+      <div className="mb-8">
+        <div className="max-w-7xl mx-auto">
+         
+
+          {/* Pipeline Overview */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              Recruitment Pipeline Overview
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {board.columns.map((column, index) => (
+                <div key={column.id} className="relative">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3 border border-gray-200 hover:shadow-md transition-all duration-300">
+                    <div className="text-sm font-semibold text-gray-700 mb-1">{column.title}</div>
+                    <div className="text-2xl font-bold text-gray-800">{column.cards.length}</div>
+                    <div className="text-xs text-gray-500">candidates</div>
+                  </div>
+                  {index < board.columns.length - 1 && (
+                    <div className="hidden lg:block absolute top-1/2 -right-2 w-4 h-0.5 bg-gradient-to-r from-gray-300 to-gray-400 transform -translate-y-1/2"></div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+       <div className="max-w-7xl mx-auto">
+         <div 
+           ref={scrollContainerRef}
+           className="flex gap-6 overflow-x-auto pb-6"
+           onDragOver={handleDragOver}
+         >
         {board.columns.map((column) => (
           <div
             key={column.id}
@@ -165,6 +253,7 @@ export default function KanbanBoard() {
                   key={card.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, card, column.id)}
+                  onDragEnd={handleDragEnd}
                   className="bg-white p-4 rounded-xl border border-gray-200 cursor-grab active:cursor-grabbing group"
                   style={{
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
@@ -173,14 +262,18 @@ export default function KanbanBoard() {
                     marginBottom: '16px'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02) rotate(1deg)';
-                    e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(245, 158, 11, 0.4), 0 10px 20px -5px rgba(245, 158, 11, 0.2)';
-                    e.currentTarget.style.borderColor = '#f59e0b';
+                    if (!isDragging) {
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02) rotate(1deg)';
+                      e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(245, 158, 11, 0.4), 0 10px 20px -5px rgba(245, 158, 11, 0.2)';
+                      e.currentTarget.style.borderColor = '#f59e0b';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0px) scale(1) rotate(0deg)';
-                    e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    if (!isDragging) {
+                      e.currentTarget.style.transform = 'translateY(0px) scale(1) rotate(0deg)';
+                      e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                    }
                   }}
                 >
                   <div className="flex justify-between items-start mb-3">
@@ -234,7 +327,12 @@ export default function KanbanBoard() {
             </div>
           </div>
         ))}
+       </div>
+     
+      
+      
       </div>
+
     </div>
   );
 }

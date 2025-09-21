@@ -313,6 +313,29 @@ export const handlers = [
       return errorResponse("Failed to delete job", 500);
     }
   }),
+    // handlers.ts
+  http.get<JobParams>("/jobs/:id/candidates", async ({ params }) => {
+    try {
+      const id = Number(params.id)
+      if (isNaN(id)) {
+        return errorResponse("Invalid job ID", 400)
+      }
+
+      // Fetch all candidates for this job
+      const candidates = await db.candidates.where("jobId").equals(id).toArray()
+
+      // Simulate delay
+      await new Promise((res) => setTimeout(res, 300))
+
+      return successResponse({
+        data: candidates,
+      })
+    } catch (error) {
+      console.error("Failed to fetch candidates:", error)
+      return errorResponse("Failed to fetch candidates", 500)
+    }
+  }),
+
     //candidates Handler begin from here
     // routes from here are related to fetching candidates info and patching data for candidates like when moving them to different stages of a job.
 
@@ -365,7 +388,33 @@ export const handlers = [
           { status: 500 }
         );
       }
-    })
+    }),
+    http.patch<{ id: string }>("/candidates/:id", async ({ params, request }) => {
+  try {
+    const id = Number(params.id)
+    if (isNaN(id)) {
+      return errorResponse("Invalid candidate ID", 400)
+    }
+
+    const body = await request.json() as { stage?: string }
+    const candidate = await db.candidates.get(id)
+    if (!candidate) {
+      return errorResponse("Candidate not found", 404)
+    }
+
+    // Only stage updates for now
+    if (body.stage) {
+      await db.candidates.update(id, { stage: body.stage })
+    }
+
+    const updated = await db.candidates.get(id)
+    return successResponse(updated)
+  } catch (error) {
+    console.error("Failed to update candidate:", error)
+    return errorResponse("Failed to update candidate", 500)
+  }
+}),
+
 
 
 
