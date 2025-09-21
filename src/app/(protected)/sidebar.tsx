@@ -9,6 +9,7 @@ import {
   Zap,
   LayoutDashboard,
   Users,
+  ClipboardList,
   Settings,
   FileText,
   //@ts-ignore
@@ -50,7 +51,7 @@ export function AppSidebar() {
     { title: "Jobs", url: "/jobs", icon: Zap, badge: `${jobCount}` },
     { title: "Assessments", url: "/assessments", icon: FileText },
     { title: "Candidates", url: "/candidates", icon: Users },
-    { title: "Settings", url: "/settings", icon: Settings },
+    { title: "To Do", url: "/to-do", icon: ClipboardList  },
   ];
 
   return (
