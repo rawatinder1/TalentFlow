@@ -87,7 +87,7 @@ export default function KanbanBoard() {
     console.log('Candidate ID type:', typeof candidateId);
     console.log('Is candidate ID a number?', !isNaN(Number(candidateId)));
 
-    const response = await fetch(`/candidates/${candidateId}`, {
+    const response = await fetch(`/mock/candidates/${candidateId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stage }),
@@ -107,7 +107,7 @@ export default function KanbanBoard() {
   };
 
   const deleteCandidateAPI = async (candidateId: string): Promise<void> => {
-    const response = await fetch(`/candidates/${candidateId}`, {
+    const response = await fetch(`/mock/candidates/${candidateId}`, {
       method: 'DELETE',
     });
 
@@ -120,7 +120,7 @@ export default function KanbanBoard() {
 
   const loadCandidates = async (): Promise<void> => {
     try {
-      const res = await fetch(`/jobs/${jobId}/candidates`);
+      const res = await fetch(`/mock/jobs/${jobId}/candidates`);
       const { data }: { data: Candidate[] } = await res.json();
 
       const cols: Column[] = STAGES.map((stage) => ({

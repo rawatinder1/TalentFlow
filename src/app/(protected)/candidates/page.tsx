@@ -157,7 +157,7 @@ const CandidatesTable = () => {
           ...(selectedStage && { stage: selectedStage })
         });
         
-        const response = await fetch(`/candidates?${params}`);
+        const response = await fetch(`/mock/candidates?${params}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch candidates');
@@ -186,7 +186,7 @@ const CandidatesTable = () => {
           ...(selectedStage && { stage: selectedStage })
         });
         
-        const response = await fetch(`/candidates?${params}`);
+        const response = await fetch(`/mock/candidates?${params}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch candidates');

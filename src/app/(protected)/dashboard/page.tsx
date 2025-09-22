@@ -28,7 +28,7 @@ const RecruitmentDashboard = () => {
     const fetchAllCandidates = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/candidates?limit=10000');
+        const response = await fetch('/mock/candidates?limit=10000');
         
         if (!response.ok) {
           throw new Error('Failed to fetch candidates');
@@ -241,7 +241,7 @@ const RecruitmentDashboard = () => {
                   
                   <div className="w-full bg-gray-50 rounded-full h-1">
                     <div 
-                      className={`h-1 bg-blue-500 rounded-full transition-all duration-700 ease-out ${
+                      className={`h-1 bg-green-500 rounded-full transition-all duration-700 ease-out ${
                         animationComplete ? 'w-full' : 'w-0'
                       }`}
                       style={{ 

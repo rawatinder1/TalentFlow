@@ -27,7 +27,7 @@ export function AppSidebar() {
   useEffect(() => {
     const fetchJobCount = async () => {
       try {
-        const response = await fetch("/api/jobs/count");
+        const response = await fetch("/mock/jobs/count");
         const data = await response.json();
         setJobCount(data.count || 0);
       } catch (error) {

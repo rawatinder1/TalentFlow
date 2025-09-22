@@ -484,7 +484,7 @@ export default function JobsPage() {
     setLoading(true);
     try {
       const queryString = buildQueryString(page, currentFilters);
-      const response = await fetch(`/jobs?${queryString}`);
+      const response = await fetch(`/mock/jobs?${queryString}`);
       const data: JobsResponse = await response.json();
       
       setJobs(data.data);
@@ -548,7 +548,7 @@ export default function JobsPage() {
     const startIndex = (currentPage - 1) * pageSize;
     await Promise.all(
       reordered.map((job, index) =>
-        fetch(`/jobs/${job.id}`, {
+        fetch(`/mock/jobs/${job.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ order: startIndex + index }),

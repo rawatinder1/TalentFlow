@@ -46,7 +46,7 @@ const AddCandidateModal: React.FC<AddCandidateModalProps> = ({
     try {
       console.log('Making POST request to /candidates');
       
-      const response = await fetch('/candidates', {
+      const response = await fetch('/mock/candidates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ const AddCandidateModal: React.FC<AddCandidateModalProps> = ({
               type="number"
               required
               min="1"
-              value={formData.jobId}
+              value={formData.jobId || ''}
               onChange={(e) => setFormData({ ...formData, jobId: parseInt(e.target.value) })}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-gray-900 text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
               placeholder="Enter job ID"

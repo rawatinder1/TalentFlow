@@ -1,7 +1,8 @@
 import { http, HttpResponse, PathParams } from "msw";
 import { db, Job } from "@/db/schema";
+import { v4 as uuidv4 } from "uuid";
 interface Candidate {
-  id?: number;
+  id?: string;
   name: string;
   email: string;
   jobId: number;
@@ -101,7 +102,7 @@ const successResponse = <T>(data: T, status: number = 200) =>
 export const handlers = [
   // GET /jobs with filtering and pagination
   //@ts-ignore
-  http.get("/jobs", async ({ request }): Promise<HttpResponse> => {
+  http.get("/mock/jobs", async ({ request }): Promise<HttpResponse> => {
     try {
       const url = new URL(request.url);
       
@@ -153,7 +154,7 @@ export const handlers = [
     }
   }),
   //@ts-ignore
-  http.get("/api/jobs/count", async (): Promise<HttpResponse> => {
+  http.get("/mock/jobs/count", async (): Promise<HttpResponse> => {
   try {
     // Get total count from database
     const totalJobs = await db.jobs.count();
@@ -169,7 +170,7 @@ export const handlers = [
 }),
   // GET /jobs/:id → return one job (unchanged)
   //@ts-ignore
-  http.get<JobParams>("/jobs/:id", async ({ params }): Promise<HttpResponse> => {
+  http.get<JobParams>("/mock/jobs/:id", async ({ params }): Promise<HttpResponse> => {
     try {
       const id = Number(params.id);
       
@@ -193,7 +194,7 @@ export const handlers = [
   // POST /jobs → create a new job (unchanged)
   //@ts-ignore
     // POST /jobs - create new job
-      http.post("/jobs", async ({ request }): Promise<HttpResponse> => {
+      http.post("/mock/jobs", async ({ request }): Promise<HttpResponse> => {
     try {
       let jobData: Partial<Job>;
       
@@ -251,7 +252,7 @@ export const handlers = [
 
   // PUT /jobs/:id → update job (unchanged)
   //@ts-ignore
-  http.put<JobParams>("/jobs/:id", async ({ params, request }): Promise<HttpResponse> => {
+  http.put<JobParams>("/mock/jobs/:id", async ({ params, request }): Promise<HttpResponse> => {
     try {
       const id = Number(params.id);
       
@@ -293,7 +294,7 @@ export const handlers = [
 
   // DELETE /jobs/:id → remove job (unchanged)
   //@ts-ignore
-  http.delete<JobParams>("/jobs/:id", async ({ params }): Promise<HttpResponse> => {
+  http.delete<JobParams>("/mock/jobs/:id", async ({ params }): Promise<HttpResponse> => {
     try {
       const id = Number(params.id);
       
@@ -314,7 +315,7 @@ export const handlers = [
     }
   }),
     // handlers.ts
-  http.get<JobParams>("/jobs/:id/candidates", async ({ params }) => {
+  http.get<JobParams>("/mock/jobs/:id/candidates", async ({ params }) => {
     try {
       const id = Number(params.id)
       if (isNaN(id)) {
@@ -339,7 +340,7 @@ export const handlers = [
     //candidates Handler begin from here
     // routes from here are related to fetching candidates info and patching data for candidates like when moving them to different stages of a job.
 
-    http.get('/candidates', async ({ request }) => {
+    http.get('/mock/candidates', async ({ request }) => {
       try {
         // Get URL search params for pagination
         const url = new URL(request.url);
@@ -389,7 +390,7 @@ export const handlers = [
         );
       }
     }),
-    http.patch<{ id: string }>("/candidates/:id", async ({ params, request }) => {
+    http.patch<{ id: string }>("/mock/candidates/:id", async ({ params, request }) => {
   try {
     const id = params.id
     if (!id) {
@@ -402,8 +403,10 @@ export const handlers = [
       return errorResponse("Candidate not found", 404)
     }
 
-    // Only stage updates for now
+    // slapping ts-ignore cause i know better than TS.
+    
     if (body.stage) {
+      //@ts-ignore
       await db.candidates.update(id, { stage: body.stage })
     }
 
@@ -414,8 +417,9 @@ export const handlers = [
     console.error("Failed to update candidate:", error)
     return errorResponse("Failed to update candidate", 500)
   }
-}),// POST /candidates → add new candidate
- http.post("/candidates", async ({ request }) => {
+}),
+
+http.post("/mock/candidates", async ({ request }) => {
   try {
     const body = (await request.json()) as Candidate
 
@@ -433,7 +437,8 @@ export const handlers = [
       return errorResponse("Stage is required", 400)
     }
 
-    const newCandidate: Omit<Candidate, "id"> = {
+    const newCandidate: Candidate = {
+      id: uuidv4(), // ✅ Generate UUID as string
       name: body.name.trim(),
       email: body.email.trim(),
       jobId: body.jobId,
@@ -441,22 +446,20 @@ export const handlers = [
     }
 
     // Save to Dexie
-    const id = await db.candidates.add(newCandidate)
-    const savedCandidate = await db.candidates.get(id)
 
-    if (!savedCandidate) {
-      return errorResponse("Failed to create candidate", 500)
-    }
+    //@ts-ignore
+    await db.candidates.add(newCandidate)
 
     // Simulate API delay
     await new Promise((res) => setTimeout(res, 400))
-    console.log("successfully reached the create candidate mock api",savedCandidate)
-    return successResponse(savedCandidate, 201)
+    console.log("successfully reached the create candidate mock api", newCandidate)
+    return successResponse(newCandidate, 201)
   } catch (error) {
     console.error("Failed to create candidate:", error)
     return errorResponse("Failed to create candidate", 500)
   }
 })
+
 
 
 

@@ -57,7 +57,7 @@ const CreateJobPage = ({ onSuccess }: { onSuccess?: () => void }) => {
   async function onSubmit(data: any) {
     setIsSubmitting(true)
     try {
-      const response = await fetch('/jobs', {
+      const response = await fetch('/mock/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, tags }),

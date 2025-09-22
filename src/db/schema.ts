@@ -1,52 +1,65 @@
-//@ts-ignore
+// @ts-ignore
 import Dexie, { Table } from "dexie"
+import { v4 as uuidv4 } from "uuid"
 
-// Define Job type
+// ------------------ Types ------------------
+
+// Job type: numeric auto-increment ID
 export interface Job {
-  id?: number; // Auto-increment key
-  title: string;
-  slug: string;
-  status: "active" | "archived";
-  tags: string[];
-  order: number;
-  createdAt: Date;
-  updatedAt: Date;
+  id?: number
+  title: string
+  slug: string
+  status: "active" | "archived"
+  tags: string[]
+  order: number
+  createdAt: Date
+  updatedAt: Date
 }
 
-// Define Candidate type
+// Candidate type: UUID string ID
 export interface Candidate {
-  id?: number;
-  name: string;
-  email: string;
-  jobId: number;
-  stage: "applied" | "screen" | "tech" | "offer" | "hired" | "rejected";
+  id: string // ✅ UUID string
+  name: string
+  email: string
+  jobId: number
+  stage: "applied" | "screen" | "tech" | "offer" | "hired" | "rejected"
 }
 
+// Assessment type: numeric auto-increment ID
 export interface Assessment {
-  id?: number;
-  jobId: number;
+  id?: number
+  jobId: number
   questions: {
-    type: "single" | "multi" | "short" | "long" | "numeric";
-    question: string;
-    options: string[];
-  }[];
+    type: "single" | "multi" | "short" | "long" | "numeric"
+    question: string
+    options: string[]
+  }[]
 }
 
-//  Dexie DB
+// ------------------ Dexie DB ------------------
+
 export class TalentFlowDB extends Dexie {
-  jobs!: Table<Job, number>;
-  candidates!: Table<Candidate, number>;
-  assessments!: Table<Assessment, number>;
+  jobs!: Table<Job, number>
+  candidates!: Table<Candidate, string> // ✅ string ID for candidates
+  assessments!: Table<Assessment, number>
 
   constructor() {
-    super("TalentFlowDB");
-    //@ts-ignore
+    super("TalentFlowDB")
+
     this.version(1).stores({
-      jobs: "++id, title, slug, status, order, *tags",
-      candidates: "++id, name, email, jobId, stage",
-      assessments: "++id, jobId"
-    });
+      jobs: "++id, title, slug, status, order, *tags", // jobs = numeric auto-increment
+      candidates: "id, name, email, jobId, stage",     // ✅ UUID string ID
+      assessments: "++id, jobId",                      // assessments = numeric auto-increment
+    })
   }
 }
 
-export const db = new TalentFlowDB();
+export const db = new TalentFlowDB()
+
+// Utility for creating a new candidate
+export function createCandidate(data: Omit<Candidate, "id">): Candidate {
+  return {
+    id: uuidv4(),
+    ...data,
+  }
+}
