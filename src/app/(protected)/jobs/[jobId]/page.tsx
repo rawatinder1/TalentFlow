@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import HelpModal from './modal';
 import { useParams } from 'next/navigation';
-
+//trigger redeployment
 // Types
 interface Card {
   id: string;

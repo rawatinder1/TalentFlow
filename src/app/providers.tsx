@@ -14,7 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         // First, start MSW
         const { worker } = await import("@/mockApis/browser");
         await worker.start({ onUnhandledRequest: "bypass" });
-        console.log("[MSW] Worker started ✅");
+        console.log("[MSW] Worker started ");
 
         // Then seed the database
         console.log("[INIT] Starting database seed...");
