@@ -1,6 +1,7 @@
 import { http, HttpResponse, PathParams } from "msw";
 import { db, Job } from "@/db/schema";
 import { v4 as uuidv4 } from "uuid";
+import { parseAppSegmentConfig } from "next/dist/build/segment-config/app/app-segment-config";
 interface Candidate {
   id?: string;
   name: string;
@@ -418,7 +419,26 @@ export const handlers = [
     return errorResponse("Failed to update candidate", 500)
   }
 }),
-
+http.delete<{ id: string }>("/mock/candidates/:id", async ({ params, request }) => {
+  try {
+    const id = params.id;
+    const candidate = await db.candidates.get(id);
+    
+    if (!candidate) {
+      return errorResponse("Candidate not found", 404);
+    }
+    
+    await db.candidates.delete(id);
+    console.log("deleted candidate ", candidate.name);
+    
+    // Return a proper HttpResponse instead of plain object
+    return HttpResponse.json({ success: true }, { status: 200 });
+    
+  } catch(error) {
+    console.error("Failed to delete candidate:", error);
+    return errorResponse("Failed to delete candidate", 500);
+  }
+}),
 http.post("/mock/candidates", async ({ request }) => {
   try {
     const body = (await request.json()) as Candidate

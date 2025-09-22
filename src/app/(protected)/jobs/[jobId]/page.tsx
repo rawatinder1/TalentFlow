@@ -109,6 +109,9 @@ export default function KanbanBoard() {
   const deleteCandidateAPI = async (candidateId: string): Promise<void> => {
     const response = await fetch(`/mock/candidates/${candidateId}`, {
       method: 'DELETE',
+      headers: {
+      'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
