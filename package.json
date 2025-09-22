@@ -35,7 +35,8 @@
     "react-konva": "^19.0.10",
     "slugify": "^1.6.6",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
