@@ -1,47 +1,75 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Sparkles } from "lucide-react";
+import AIPromptModal from "./kikoPromptModal";
 
-async function generateAssessment(prompt: string, jobId: string) {
-  const res = await fetch("/api/ai", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, jobId }),
-  });
-
-  if (!res.ok) throw new Error("Failed to generate assessment");
-  return res.json();
+interface KikoProps {
+  setFormData: (data: any) => void;
+  jobId: string;
+  title: string;
 }
 
-const Kiko = ({ setFormData }: { setFormData: (data: any) => void }) => {
-  const [loading, setLoading] = useState(false);
-
-  const handleGenerate = async () => {
-    try {
-      setLoading(true);
-      const data = await generateAssessment(
-        "Give me a React + HR + Aptitude assessment 10 questions per section",
-        "123"
-      );
-      setFormData(data); // boom, UI updates
-    } catch (err) {
-      console.error("Failed to generate assessment:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+const Kiko: React.FC<KikoProps> = ({ setFormData, jobId, title }) => {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Button
-      onClick={handleGenerate}
-      disabled={loading}
-      variant="default"
-      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md"
-    >
-      {loading ? "Generating..." : "✨ Generate with AI"}
-    </Button>
+    <>
+      <div className="flex items-center justify-center p-4">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => setIsOpen(true)} // 👈 only opens modal
+                variant="default"
+                size="default"
+                className="
+                  relative overflow-hidden
+                  bg-black hover:bg-black/90
+                  text-white/90 hover:text-white
+                  shadow-sm hover:shadow-md
+                  transition-all duration-300 ease-out
+                  hover:scale-102
+                  border border-white/10 hover:border-white/20
+                  px-5 py-2
+                  rounded-xl
+                  group
+                "
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="font-medium">kiko</span>
+                </div>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              className="bg-neutral-800/95 backdrop-blur-sm text-white/90 border-neutral-700/50 rounded-lg px-3 py-2"
+            >
+              <p className="text-sm font-normal">
+                generate assessment via ai copilot
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      {/* Modal */}
+      <AIPromptModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        setFormData={setFormData}
+        jobId={jobId}
+        title={title}
+      />
+    </>
   );
 };
 
 export default Kiko;
-

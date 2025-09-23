@@ -1,6 +1,6 @@
 "use client"
 import React, { use ,useEffect, useState } from 'react';
-import { Plus, Trash2, Eye, Code, ChevronLeft, ChevronRight, Edit2, ChevronDown, Check } from 'lucide-react';
+import { Plus, Trash2, Eye, Code, ChevronLeft, ChevronRight, Edit2, ChevronDown, Check, Loader2, Save } from 'lucide-react';
 import FormPreview, { Question, Section, FormData } from './FormPreview';
 import { Button }  from '@/components/ui/button';
 import { CodeBlock } from '@/components/ui/code-block';
@@ -276,51 +276,53 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
   const showSectionView = !currentQuestion || (currentSection && currentSection.questions.length === 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
       {/* Header */}
-      <div className="bg-white border-b p-4">
-        <div className="flex justify-between items-center">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-neutral-200/50 px-6 py-1.5">
+        <div className="flex justify-between items-center h-10">
           <div>
             <input
               value={formData.title}
               onChange={(e) => updateFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="text-2xl font-bold bg-transparent border-none outline-none"
+              className="text-base font-black bg-transparent border-none outline-none placeholder:text-neutral-400 text-neutral-800"
+              style={{ fontWeight: '900' }}
               placeholder="Assessment Title"
-            />
-            <input
-              value={formData.jobId}
-              onChange={(e) => updateFormData(prev => ({ ...prev, jobId: e.target.value }))}
-              className="text-sm text-gray-600 bg-transparent border-none outline-none mt-1"
-              placeholder="Job ID"
             />
           </div>
           
           <div className="flex gap-2 items-center">
-            {['preview', 'json'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab as 'preview' | 'json')}
-                className={`flex items-center px-4 py-2 rounded-lg ${
-                  activeTab === tab ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {tab === 'preview' ? <Eye size={16} className="mr-2" /> : <Code size={16} className="mr-2" />}
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+            {/* Preview/JSON Slider */}
+            <div className="flex items-center bg-neutral-100 rounded-lg p-1">
+              {['preview', 'json'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as 'preview' | 'json')}
+                  className={`flex items-center px-3 py-1.5 rounded-md transition-all duration-200 text-sm ${
+                    activeTab === tab 
+                      ? 'bg-white text-neutral-900 shadow-sm' 
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  {tab === 'preview' ? <Eye size={14} className="mr-1.5" /> : <Code size={14} className="mr-1.5" />}
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+            
+            <AssessmentPicker
+              jobId={jobId}
+              onSelect={(data) => setFormData(data)}
+            />
+            
+            <Kiko setFormData={setFormData} title={formData.title} jobId={formData.jobId}/>
             
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="ml-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-black disabled:opacity-50 font-medium shadow-sm transition-colors"
+              className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all duration-200 border-0"
             >
-              {saving ? "Saving..." : "Save Assessment"}
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             </Button>
-            <AssessmentPicker
-              jobId={jobId}
-              onSelect={(data) => setFormData(data)} // replace formData with selected
-            />
-            <Kiko setFormData={setFormData}/>
 
           </div>
         </div>
@@ -328,47 +330,56 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
 
       <div className="flex h-screen">
         {/* Builder */}
-        <div className="w-1/2 p-6 bg-white border-r overflow-y-auto">
-          <div className="mb-6">
-            <h2 className="text-xl  text-zinc-500 font-semibold mb-2">Assessment Builder</h2>
+        <div className="w-1/2 p-4 bg-white/50 backdrop-blur-sm border-r border-neutral-200/60 overflow-y-auto">
+          <div className="mb-4">
+            <h2 className="text-xl font-medium bg-gradient-to-r from-neutral-700 to-neutral-600 bg-clip-text text-transparent mb-3">Assessment Builder</h2>
             <div className="flex items-center justify-between">
-              <p className="text-black text-sm">
-                Section {currentSectionIndex + 1} of {formData.sections.length}
-                {allQuestions.length > 0 && ` • Question ${currentSlide + 1} of ${allQuestions.length}`}
-              </p>
+              <div className="text-neutral-600 text-sm font-light">
+                <span className="text-neutral-800 font-medium">Section {currentSectionIndex + 1}</span> 
+                <span className="text-neutral-500 mx-1">of</span> 
+                <span className="text-neutral-700">{formData.sections.length}</span>
+                {allQuestions.length > 0 && (
+                  <>
+                    <span className="text-neutral-400 mx-2">•</span>
+                    <span className="text-neutral-800 font-medium">Question {currentSlide + 1}</span>
+                    <span className="text-neutral-500 mx-1">of</span>
+                    <span className="text-neutral-700">{allQuestions.length}</span>
+                  </>
+                )}
+              </div>
               
               {/* Section Navigation */}
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <button
                   onClick={prevSection}
                   disabled={currentSectionIndex === 0}
-                  className="flex items-center px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
+                  className="flex items-center px-2 py-1 text-xs border border-neutral-300 rounded-lg hover:bg-neutral-50 disabled:opacity-40 transition-all duration-200"
                 >
-                  <ChevronLeft size={14} className="mr-1" />
-                  Prev Section
+                  <ChevronLeft size={12} className="mr-1" />
+                  Prev
                 </button>
                 <button
                   onClick={nextSection}
                   disabled={currentSectionIndex === formData.sections.length - 1}
-                  className="flex items-center px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
+                  className="flex items-center px-2 py-1 text-xs border border-neutral-300 rounded-lg hover:bg-neutral-50 disabled:opacity-40 transition-all duration-200"
                 >
-                  Next Section
-                  <ChevronRight size={14} className="ml-1" />
+                  Next
+                  <ChevronRight size={12} className="ml-1" />
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border rounded-lg p-6">
+          <div className="bg-white/90 backdrop-blur-sm border border-neutral-200/60 rounded-xl p-4 shadow-lg shadow-neutral-900/5 bg-gradient-to-br from-white to-neutral-50/50">
             {/* Section Header */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mb-4 p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-lg border border-blue-100/60">
               <div className="flex items-center justify-between">
                 {editingSectionId === currentSection?.id ? (
-                  <div className="flex items-center flex-1 mr-4">
+                  <div className="flex items-center flex-1 mr-2">
                     <input
                       value={sectionInput}
                       onChange={(e) => setSectionInput(e.target.value)}
-                      className="flex-1 p-2 border rounded mr-2"
+                      className="flex-1 p-2 text-sm border border-neutral-300 rounded-lg mr-2 bg-white/80 backdrop-blur-sm"
                       placeholder="Section title"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') updateSection(currentSection.id, sectionInput);
@@ -378,14 +389,14 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                     />
                     <button
                       onClick={() => updateSection(currentSection.id, sectionInput)}
-                      className="px-3 py-1 bg-green-600 text-white text-sm rounded mr-2"
+                      className="px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700 transition-colors"
                     >
                       Save
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center flex-1">
-                    <h3 className="text-lg font-semibold text-blue-700">
+                    <h3 className="text-base font-medium text-blue-800">
                       {currentSection?.title || 'No Section'}
                     </h3>
                     {currentSection && (
@@ -394,9 +405,9 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                           setEditingSectionId(currentSection.id);
                           setSectionInput(currentSection.title);
                         }}
-                        className="ml-2 p-1 text-blue-600 hover:bg-blue-100 rounded"
+                        className="ml-2 p-1.5 text-blue-600 hover:bg-blue-100/60 rounded-lg transition-colors"
                       >
-                        <Edit2 size={16} />
+                        <Edit2 size={14} />
                       </button>
                     )}
                   </div>
@@ -405,9 +416,9 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                 {currentSection && (
                   <button
                     onClick={() => deleteSection(currentSection.id)}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                   </button>
                 )}
               </div>
@@ -415,26 +426,26 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
 
             {showSectionView ? (
               /* Section View - when no questions */
-              <div className="text-center py-12">
-                <p className="text-gray-500 mb-4">
+              <div className="text-center py-8">
+                <p className="text-neutral-500 mb-4 font-light text-sm">
                   {currentSection?.questions.length === 0 
                     ? "This section has no questions yet" 
                     : "No sections or questions yet"}
                 </p>
-                <div className="flex gap-3 justify-center">
+                <div className="flex gap-2 justify-center">
                   <button
                     onClick={addSection}
-                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    className="flex items-center px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 shadow-sm text-sm"
                   >
-                    <Plus size={16} className="mr-2" />
+                    <Plus size={14} className="mr-1.5" />
                     Add Section
                   </button>
                   {currentSection && (
                     <button
                       onClick={() => addQuestion(currentSection.id)}
-                      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm text-sm"
                     >
-                      <Plus size={16} className="mr-2" />
+                      <Plus size={14} className="mr-1.5" />
                       Add First Question
                     </button>
                   )}
@@ -448,43 +459,43 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                     <input
                       value={currentQuestion.label}
                       onChange={(e) => updateQuestion(currentQuestion.sectionId, currentQuestion.id, { label: e.target.value })}
-                      className="flex-1 p-3 text-lg border rounded mr-4"
+                      className="flex-1 p-3 text-base border border-neutral-300 rounded-lg mr-3 bg-white/80 backdrop-blur-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all outline-none"
                       placeholder="Question text"
                     />
                     <button
                       onClick={() => deleteQuestion(currentQuestion.sectionId, currentQuestion.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded"
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     >
-                      <Trash2 size={20} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Question Type</label>
+                      <label className="block text-xs font-medium mb-2 text-neutral-700">Question Type</label>
                       {/* Custom Dropdown */}
                       <div className="relative">
                         <button
                           onClick={() => setDropdownOpen(!dropdownOpen)}
-                          className="w-full p-3 border rounded-lg bg-white text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full p-3 border border-neutral-300 rounded-lg bg-white/80 backdrop-blur-sm text-left flex items-center justify-between hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all text-sm"
                         >
-                          <span className="text-gray-900">
+                          <span className="text-neutral-900">
                             {questionTypes.find(t => t.value === currentQuestion.type)?.label}
                           </span>
-                          <ChevronDown size={16} className={`text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown size={14} className={`text-neutral-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
                         
                         {dropdownOpen && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+                          <div className="absolute z-10 w-full mt-1 bg-white/95 backdrop-blur-sm border border-neutral-200 rounded-lg shadow-lg">
                             {questionTypes.map((type) => (
                               <button
                                 key={type.value}
                                 onClick={() => changeQuestionType(currentQuestion.sectionId, currentQuestion.id, type.value as Question['type'])}
-                                className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between group first:rounded-t-lg last:rounded-b-lg"
+                                className="w-full px-3 py-2 text-left hover:bg-neutral-50 flex items-center justify-between group first:rounded-t-lg last:rounded-b-lg transition-colors text-sm"
                               >
-                                <span className="text-gray-900">{type.label}</span>
+                                <span className="text-neutral-900">{type.label}</span>
                                 {currentQuestion.type === type.value && (
-                                  <Check size={16} className="text-blue-600" />
+                                  <Check size={14} className="text-blue-600" />
                                 )}
                               </button>
                             ))}
@@ -499,9 +510,9 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                           type="checkbox"
                           checked={currentQuestion.required}
                           onChange={(e) => updateQuestion(currentQuestion.sectionId, currentQuestion.id, { required: e.target.checked })}
-                          className="mr-3 w-4 h-4"
+                          className="mr-2 w-3.5 h-3.5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
                         />
-                        Required field
+                        <span className="text-neutral-700 text-sm">Required</span>
                       </label>
                     </div>
                   </div>
@@ -509,14 +520,14 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                   {/* Type-specific fields */}
                   {currentQuestion.type === 'long' && (
                     <div>
-                      <label className="block text-sm font-medium mb-2">Maximum Characters</label>
+                      <label className="block text-xs font-medium mb-2 text-neutral-700">Maximum Characters</label>
                       <input
                         type="number"
                         value={(currentQuestion as any).maxLength || ''}
                         onChange={(e) => updateQuestion(currentQuestion.sectionId, currentQuestion.id, { 
                           maxLength: e.target.value ? parseInt(e.target.value) : undefined 
                         })}
-                        className="w-full p-3 border rounded"
+                        className="w-full p-3 border border-neutral-300 rounded-lg bg-white/80 backdrop-blur-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all outline-none text-sm"
                         placeholder="Leave blank for no limit"
                       />
                     </div>
@@ -524,7 +535,7 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
 
                   {(currentQuestion.type === 'single' || currentQuestion.type === 'multi') && (
                     <div>
-                      <label className="block text-sm font-medium mb-2">Options (one per line)</label>
+                      <label className="block text-xs font-medium mb-2 text-neutral-700">Options (one per line)</label>
                       <textarea
                         value={(currentQuestion as any).options?.join('\n') || ''}
                         onChange={(e) => {
@@ -534,37 +545,37 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                           const options = lines.length === 1 && lines[0] === '' ? [] : lines;
                           updateQuestion(currentQuestion.sectionId, currentQuestion.id, { options });
                         }}
-                        className="w-full p-3 border rounded h-32"
+                        className="w-full p-3 border border-neutral-300 rounded-lg h-24 bg-white/80 backdrop-blur-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all outline-none resize-none text-sm"
                         placeholder="Option 1&#10;Option 2&#10;Option 3"
                       />
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-xs text-neutral-500 mt-1 font-light">
                         Press Enter for new lines. Empty lines at the end will be removed automatically.
                       </p>
                     </div>
                   )}
 
                   {currentQuestion.type === 'numeric' && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium mb-2">Min Value</label>
+                        <label className="block text-xs font-medium mb-2 text-neutral-700">Min Value</label>
                         <input
                           type="number"
                           value={(currentQuestion as any).min ?? ''}
                           onChange={(e) => updateQuestion(currentQuestion.sectionId, currentQuestion.id, { 
                             min: e.target.value ? parseInt(e.target.value) : undefined 
                           })}
-                          className="w-full p-3 border rounded"
+                          className="w-full p-3 border border-neutral-300 rounded-lg bg-white/80 backdrop-blur-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all outline-none text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Max Value</label>
+                        <label className="block text-xs font-medium mb-2 text-neutral-700">Max Value</label>
                         <input
                           type="number"
                           value={(currentQuestion as any).max ?? ''}
                           onChange={(e) => updateQuestion(currentQuestion.sectionId, currentQuestion.id, { 
                             max: e.target.value ? parseInt(e.target.value) : undefined 
                           })}
-                          className="w-full p-3 border rounded"
+                          className="w-full p-3 border border-neutral-300 rounded-lg bg-white/80 backdrop-blur-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all outline-none text-sm"
                         />
                       </div>
                     </div>
@@ -572,30 +583,30 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
 
                 {/* Question Navigation */}
-                <div className="flex justify-between items-center mt-8 pt-6 border-t">
+                <div className="flex justify-between items-center mt-6 pt-4 border-t border-neutral-200">
                   <button
                     onClick={prevQuestion}
                     disabled={currentSlide === 0}
-                    className="flex items-center px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                    className="flex items-center px-3 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 disabled:opacity-40 transition-all duration-200 text-sm"
                   >
-                    <ChevronLeft size={16} className="mr-2" />
-                    Previous Question
+                    <ChevronLeft size={14} className="mr-1" />
+                    Previous
                   </button>
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={addSection}
-                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      className="flex items-center px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 shadow-sm text-sm"
                     >
-                      <Plus size={16} className="mr-2" />
+                      <Plus size={14} className="mr-1.5" />
                       Add Section
                     </button>
                     
                     <button
                       onClick={() => addQuestion(currentQuestion.sectionId)}
-                      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm text-sm"
                     >
-                      <Plus size={16} className="mr-2" />
+                      <Plus size={14} className="mr-1.5" />
                       Add Question
                     </button>
                   </div>
@@ -603,10 +614,10 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                   <button
                     onClick={nextQuestion}
                     disabled={currentSlide === allQuestions.length - 1}
-                    className="flex items-center px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                    className="flex items-center px-3 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 disabled:opacity-40 transition-all duration-200 text-sm"
                   >
-                    Next Question
-                    <ChevronRight size={16} className="ml-2" />
+                    Next
+                    <ChevronRight size={14} className="ml-1" />
                   </button>
                 </div>
               </>
@@ -615,9 +626,9 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {/* Preview/JSON */}
-        <div className="w-1/2 p-6 overflow-y-auto bg-black">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2 text-white">
+        <div className="w-1/2 p-4 overflow-y-auto bg-gradient-to-br from-neutral-900 to-black">
+          <div className="mb-4">
+            <h2 className="text-lg font-light mb-2 text-white/90">
               {activeTab === 'preview' ? 'Live Preview' : 'JSON Output'}
             </h2>
           </div>
