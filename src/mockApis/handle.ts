@@ -9,6 +9,11 @@ interface Candidate {
   jobId: number;
   stage: "applied" | "screen" | "tech" | "offer" | "hired" | "rejected";
 }
+interface AssessmentPayload {
+  id:string;
+  jobId: number;
+  data: any;
+}
 // Types for pagination and filtering
 interface PaginationResponse<T> {
   data: T[];
@@ -458,7 +463,7 @@ http.post("/mock/candidates", async ({ request }) => {
     }
 
     const newCandidate: Candidate = {
-      id: uuidv4(), // ✅ Generate UUID as string
+      id: uuidv4(), 
       name: body.name.trim(),
       email: body.email.trim(),
       jobId: body.jobId,
@@ -470,7 +475,7 @@ http.post("/mock/candidates", async ({ request }) => {
     //@ts-ignore
     await db.candidates.add(newCandidate)
 
-    // Simulate API delay
+    // Simulate API delay of 400ms.
     await new Promise((res) => setTimeout(res, 400))
     console.log("successfully reached the create candidate mock api", newCandidate)
     return successResponse(newCandidate, 201)
@@ -482,11 +487,85 @@ http.post("/mock/candidates", async ({ request }) => {
 
 
 
+/** ASSESSMENTS ROUTE HANDLERS START FROM HERE**/
+http.post("/mock/assessments", async ({ request }) => {
+  try {
+    // parse incoming body
+    const body = await request.json() as AssessmentPayload;
+
+    if (!body || !body.jobId || !body.data) {
+      return new HttpResponse(
+        JSON.stringify({ error: "Missing jobId or data" }),
+        { status: 400 }
+      );
+    }
+
+    // Insert into Dexie
+    // artificial delay 
+    await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          console.log("wasting time");
+          resolve();
+        }, 1500);
+    });
+    const id = await db.assessments.add({
+      id: uuidv4(),
+      jobId: Number(body.jobId), 
+      data: body.data,           // data has type any to insert ->raw JSON blob
+    });
+
+    return new HttpResponse(
+      JSON.stringify({
+        message: "Assessment created successfully",
+        id,
+      }),
+      { status: 201 }
+    );
+  } catch (err: any) {
+    console.error("Failed to save assessment:", err);
+    return new HttpResponse(
+      JSON.stringify({ error: "Failed to save assessment" }),
+      { status: 500 }
+    );
+  }
+}),
+/** api endpoint to fetch all saved assessment per job i am using  jobid from body to retrive assessments for that job */
 
 
+http.get("/mock/assessments", async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const jobIdParam = url.searchParams.get("jobId");
 
+    if (!jobIdParam) {
+      return new HttpResponse(
+        JSON.stringify({ error: "Missing jobId query param" }),
+        { status: 400 }
+      );
+    }
 
+    const jobId = Number(jobIdParam);
+    if (isNaN(jobId)) {
+      return new HttpResponse(
+        JSON.stringify({ error: "Invalid jobId" }),
+        { status: 400 }
+      );
+    }
 
+    // Query Dexie for all assessments with that jobId
+    const assessments = await db.assessments.where("jobId").equals(jobId).toArray();
 
+    return new HttpResponse(JSON.stringify(assessments), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("Failed to fetch assessments:", err);
+    return new HttpResponse(
+      JSON.stringify({ error: "Failed to fetch assessments" }),
+      { status: 500 }
+    );
+  }
+}),
 
 ];

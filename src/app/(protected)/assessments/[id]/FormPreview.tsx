@@ -149,7 +149,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ formData }) => {
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
         <h1 className="text-2xl font-bold">{formData.title}</h1>
-        <p className="text-blue-100 text-sm"> {formData.jobId}</p>
+        <p className="text-blue-100 text-sm"> Job_id : {formData.jobId}</p>
       </div>
       
       <div className="p-6">

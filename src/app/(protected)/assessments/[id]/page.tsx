@@ -1,9 +1,11 @@
 "use client"
 import React, { use ,useEffect, useState } from 'react';
-import { Plus, Trash2, Eye, Code, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Eye, Code, ChevronLeft, ChevronRight, Edit2, ChevronDown, Check } from 'lucide-react';
 import FormPreview, { Question, Section, FormData } from './FormPreview';
+import { Button }  from '@/components/ui/button';
 import { CodeBlock } from '@/components/ui/code-block';
-
+import  Kiko  from "./kiko"
+import {AssessmentPicker} from './savedAssessments'
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -13,13 +15,13 @@ const generateUUID = () => {
 };
 
 const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
-   const { id } = use(params); // ✅ unwrap the promise correctly
+   const { id } = use(params); 
   const jobId = Number(id);
 
   const [jobTitle, setJobTitle] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
-  jobId: `Job_Id : ${id}`,
+  jobId: id,
   title: "",
   sections: [{
     id: generateUUID(),
@@ -54,16 +56,53 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
     } else {
       setError("Invalid job ID");
     }
+    /*async function fetchAssessments(){
+      try{
+        const res=await fetch(`/mock/assessments?jobId=${jobId}`);
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+
+      }catch(err:any){
+          setError(err.message || "Failed to fetch job");
+
+
+      }
+    }*/
+   // fetchAssessments();
   }, [jobId]);
-
-
-
 
   const [activeTab, setActiveTab] = useState<'preview' | 'json'>('preview');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionInput, setSectionInput] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+    
+  const handleSave = async () => {
+      try {
+        setSaving(true);
+
+        const res = await fetch("/mock/assessments", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ jobId: formData.jobId, data: formData }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error ${res.status}`);
+        }
+
+        const data = await res.json();
+
+      } catch (err) {
+        console.error("Failed to save assessment:", err);
+      } finally {
+        setSaving(false);
+      }
+    };
 
   const questionTypes = [
     { value: 'short', label: 'Short Text' },
@@ -206,6 +245,7 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
       label: oldQuestion.label,
       required: oldQuestion.required
     });
+    setDropdownOpen(false);
   };
 
   const nextSection = () => {
@@ -255,7 +295,7 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {['preview', 'json'].map(tab => (
               <button
                 key={tab}
@@ -268,6 +308,20 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
+            
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="ml-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-black disabled:opacity-50 font-medium shadow-sm transition-colors"
+            >
+              {saving ? "Saving..." : "Save Assessment"}
+            </Button>
+            <AssessmentPicker
+              jobId={jobId}
+              onSelect={(data) => setFormData(data)} // replace formData with selected
+            />
+            <Kiko setFormData={setFormData}/>
+
           </div>
         </div>
       </div>
@@ -276,9 +330,9 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
         {/* Builder */}
         <div className="w-1/2 p-6 bg-white border-r overflow-y-auto">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Form Builder</h2>
+            <h2 className="text-xl  text-zinc-500 font-semibold mb-2">Assessment Builder</h2>
             <div className="flex items-center justify-between">
-              <p className="text-gray-600 text-sm">
+              <p className="text-black text-sm">
                 Section {currentSectionIndex + 1} of {formData.sections.length}
                 {allQuestions.length > 0 && ` • Question ${currentSlide + 1} of ${allQuestions.length}`}
               </p>
@@ -408,15 +462,35 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">Question Type</label>
-                      <select
-                        value={currentQuestion.type}
-                        onChange={(e) => changeQuestionType(currentQuestion.sectionId, currentQuestion.id, e.target.value as Question['type'])}
-                        className="w-full p-3 border rounded"
-                      >
-                        {questionTypes.map(type => (
-                          <option key={type.value} value={type.value}>{type.label}</option>
-                        ))}
-                      </select>
+                      {/* Custom Dropdown */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setDropdownOpen(!dropdownOpen)}
+                          className="w-full p-3 border rounded-lg bg-white text-left flex items-center justify-between hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <span className="text-gray-900">
+                            {questionTypes.find(t => t.value === currentQuestion.type)?.label}
+                          </span>
+                          <ChevronDown size={16} className={`text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {dropdownOpen && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+                            {questionTypes.map((type) => (
+                              <button
+                                key={type.value}
+                                onClick={() => changeQuestionType(currentQuestion.sectionId, currentQuestion.id, type.value as Question['type'])}
+                                className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between group first:rounded-t-lg last:rounded-b-lg"
+                              >
+                                <span className="text-gray-900">{type.label}</span>
+                                {currentQuestion.type === type.value && (
+                                  <Check size={16} className="text-blue-600" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex items-center pt-6">
@@ -560,6 +634,14 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
 
         </div>
       </div>
+      
+      {/* Click outside to close dropdown */}
+      {dropdownOpen && (
+        <div 
+          className="fixed inset-0 z-5" 
+          onClick={() => setDropdownOpen(false)}
+        />
+      )}
     </div>
   );
 };
