@@ -11,15 +11,6 @@ interface Job {
   status: string;
   order: number;
   tags: string[];
-  description?: string;
-  location?: string;
-  salary?: string;
-  type?: string;
-  department?: string;
-  experience?: string;
-  postedDate?: Date;
-  applicationCount?: number;
-  companyName?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -179,20 +170,17 @@ export default function JobCards() {
   const [sortBy, setSortBy] = useState('order');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Status options for dropdown
   const statusOptions = [
     { value: 'all', label: 'All Jobs' },
     { value: 'active', label: 'Active' },
   ];
 
-  // Handle job card click - navigate to assessment page
   const handleJobClick = (jobId: number | undefined) => {
     if (jobId) {
       router.push(`/assessments/${jobId}`);
     }
   };
 
-  // Load jobs on component mount and when filters change
   useEffect(() => {
     fetchJobs({
       page: pagination.page,
@@ -230,7 +218,7 @@ export default function JobCards() {
     target.style.transform = 'translateY(-12px) rotate(1deg) scale(1.02)';
     target.style.boxShadow =
       '0 15px 35px rgba(245, 158, 11, 0.4), 0 5px 15px rgba(245, 158, 11, 0.2), 0 0 20px rgba(245, 158, 11, 0.1)';
-    target.style.borderColor = '#f59e0b'; // amber-500
+    target.style.borderColor = '#f59e0b'; 
   };
 
   const handleCardMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -356,64 +344,11 @@ export default function JobCards() {
                     </span>
                   </div>
                   
-                  {job.companyName && (
-                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
-                      <Building2 className="w-4 h-4 text-gray-400" />
-                      {job.companyName}
-                    </div>
-                  )}
-
-                  {job.description && (
-                    <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-                      {truncateText(job.description, 80)}
-                    </p>
-                  )}
+                 
+                  
                 </div>
 
-                {/* Job Details */}
-                <div className="space-y-2 mb-4">
-                  {job.location && (
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      {job.location}
-                    </div>
-                  )}
-
-                  {job.type && (
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Briefcase className="w-4 h-4 text-gray-400" />
-                      {job.type}
-                    </div>
-                  )}
-
-                  {job.salary && (
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <DollarSign className="w-4 h-4 text-gray-400" />
-                      {job.salary}
-                    </div>
-                  )}
-
-                  {job.experience && (
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      {job.experience}
-                    </div>
-                  )}
-
-                  {job.applicationCount !== undefined && (
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Users className="w-4 h-4 text-gray-400" />
-                      {job.applicationCount} applications
-                    </div>
-                  )}
-
-                  {job.postedDate && (
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      Posted {formatDate(job.postedDate)}
-                    </div>
-                  )}
-                </div>
+               
 
                 {/* Tags */}
                 {job.tags && job.tags.length > 0 && (

@@ -478,7 +478,11 @@ http.post("/mock/candidates", async ({ request }) => {
     console.error("Failed to create candidate:", error)
     return errorResponse("Failed to create candidate", 500)
   }
-})
+}),
+
+
+
+
 
 
 
