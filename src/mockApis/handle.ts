@@ -256,7 +256,45 @@ export const handlers = [
       return errorResponse("Failed to create job", 500);
     }
   }),
+ http.put<JobParams>("/mock/jobs/:id", async ({ params, request })=> {
+    try {
+      const id = Number(params.id);
+      
+      if (isNaN(id)) {
+        return errorResponse("Invalid job ID", 400);
+      }
 
+      let updates: Partial<Job>;
+      
+      try {
+        updates = await request.json() as Partial<Job>;
+      } catch {
+        return errorResponse("Invalid JSON payload", 400);
+      }
+
+      const existingJob = await db.jobs.get(id);
+      if (!existingJob) {
+        return errorResponse("Job not found", 404);
+      }
+
+      const updateData = {
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      await db.jobs.update(id, updateData);
+      const updatedJob = await db.jobs.get(id);
+
+      if (!updatedJob) {
+        return errorResponse("Failed to retrieve updated job", 500);
+      }
+
+      return successResponse<Job>(updatedJob);
+    } catch (error) {
+      console.error("Failed to update job:", error);
+      return errorResponse("Failed to update job", 500);
+    }
+  }),
   // PUT /jobs/:id → update job (unchanged)
   //@ts-ignore
 http.put<JobParams>("/mock/jobs/:id/toggle-status", async ({ params }): Promise<HttpResponse> => {
