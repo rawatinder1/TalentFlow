@@ -13,7 +13,7 @@ export default function Home() {
   }
   const goToDemo = () => {
     // Replace with your actual demo link
-    window.location.href = "https://talentflow-demo.vercel.app";
+    window.location.href = "https://www.loom.com/share/0bf20eff27f2444ab84e37696ae205f6?sid=26a16864-07dd-4c2e-95b4-6c6e3b7b6d23";
   };
 
   return (
