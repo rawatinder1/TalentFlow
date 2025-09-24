@@ -1,12 +1,13 @@
 "use client"
 import React, { use ,useEffect, useState } from 'react';
-import { Plus, Trash2, Eye, Code, ChevronLeft, ChevronRight, Edit2, ChevronDown, Check, Loader2, Save } from 'lucide-react';
+import { Plus, Trash2, Eye, Code, ChevronLeft, ChevronRight, Edit2, Loader2, Save } from 'lucide-react';
 import FormPreview, { Question, Section, FormData } from './FormPreview';
 import { Button }  from '@/components/ui/button';
 import { CodeBlock } from '@/components/ui/code-block';
 import PublishToggle from './publisher';
 import  Kiko  from "./kiko"
 import {AssessmentPicker} from './savedAssessments'
+
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -57,18 +58,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
     } else {
       setError("Invalid job ID");
     }
-    /*async function fetchAssessments(){
-      try{
-        const res=await fetch(`/mock/assessments?jobId=${jobId}`);
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-
-      }catch(err:any){
-          setError(err.message || "Failed to fetch job");
-
-
-      }
-    }*/
-   // fetchAssessments();
   }, [jobId]);
 
   const [activeTab, setActiveTab] = useState<'preview' | 'json'>('preview');
@@ -76,7 +65,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionInput, setSectionInput] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [savedAssessmentId, setSavedAssessmentId]=useState("");
 
   const [saving, setSaving] = useState(false);
@@ -84,7 +72,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleSave = async () => {
       try {
         setSaving(true);
-
         const res = await fetch("/mock/assessments", {
           method: "POST",
           headers: {
@@ -92,15 +79,11 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
           },
           body: JSON.stringify({ jobId: formData.jobId, data: formData }),
         });
-
         if (!res.ok) {
           throw new Error(`HTTP error ${res.status}`);
         }
-
         const data = await res.json();
         setSavedAssessmentId(data.id);
-
-
       } catch (err) {
         console.error("Failed to save assessment:", err);
       } finally {
@@ -108,15 +91,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
       }
     };
 
-  const questionTypes = [
-    { value: 'short', label: 'Short Text' },
-    { value: 'long', label: 'Long Text' },
-    { value: 'single', label: 'Single Choice' },
-    { value: 'multi', label: 'Multiple Choice' },
-    { value: 'numeric', label: 'Numeric' }
-  ];
-
-  // Get flattened questions with section info
   const allQuestions = formData.sections.flatMap(section => 
     section.questions.map(q => ({ ...q, sectionId: section.id, sectionTitle: section.title }))
   );
@@ -125,18 +99,12 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const createQuestion = (type: Question['type']): Question => {
     const base = { id: `q${Date.now()}`, label: 'New Question', required: true };
-    
-    switch (type) {
-      case 'short': return { ...base, type: 'short' };
-      case 'long': return { ...base, type: 'long' };
-      case 'single':
-      case 'multi': return { ...base, type, options: ['Option 1', 'Option 2'] };
-      case 'numeric': return { ...base, type: 'numeric' };
-    }
-  };
-
-  const updateFormData = (updater: (prev: FormData) => FormData) => {
-    setFormData(updater);
+    if (type === 'short') return { ...base, type: 'short' };
+    if (type === 'long') return { ...base, type: 'long' };
+    if (type === 'single') return { ...base, type: 'single', options: ['Option 1', 'Option 2'] };
+    if (type === 'multi') return { ...base, type: 'multi', options: ['Option 1', 'Option 2'] };
+    if (type === 'numeric') return { ...base, type: 'numeric' };
+    return { ...base, type: 'short' };
   };
 
   const addSection = () => {
@@ -145,45 +113,42 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
       title: "New Section",
       questions: []
     };
-    
-    updateFormData(prev => ({ ...prev, sections: [...prev.sections, newSection] }));
+    setFormData(prev => ({ ...prev, sections: [...prev.sections, newSection] }));
     setCurrentSectionIndex(formData.sections.length);
-    // Don't auto-navigate to questions since section might be empty
   };
 
   const deleteSection = (sectionId: string) => {
-    // Allow deletion even if it's the last section
     const sectionIndex = formData.sections.findIndex(s => s.id === sectionId);
-    
-    updateFormData(prev => ({
+    setFormData(prev => ({
       ...prev,
       sections: prev.sections.filter(s => s.id !== sectionId)
     }));
     
-    // If we deleted the last section and no sections remain, add a new one
     if (formData.sections.length === 1) {
       const newSection = {
         id: generateUUID(),
         title: "New Section",
         questions: []
       };
-      updateFormData(prev => ({ ...prev, sections: [newSection] }));
+      setFormData(prev => ({ ...prev, sections: [newSection] }));
       setCurrentSectionIndex(0);
     } else {
-      // Adjust current section index
       if (currentSectionIndex >= sectionIndex && currentSectionIndex > 0) {
         setCurrentSectionIndex(currentSectionIndex - 1);
       }
     }
     
-    // Adjust question slide if needed
-    if (currentSlide >= allQuestions.length) {
-      setCurrentSlide(Math.max(0, allQuestions.length - 1));
+    const newAllQuestions = formData.sections
+      .filter(s => s.id !== sectionId)
+      .flatMap(section => section.questions.map(q => ({ ...q, sectionId: section.id })));
+    
+    if (currentSlide >= newAllQuestions.length) {
+      setCurrentSlide(Math.max(0, newAllQuestions.length - 1));
     }
   };
 
   const updateSection = (sectionId: string, title: string) => {
-    updateFormData(prev => ({
+    setFormData(prev => ({
       ...prev,
       sections: prev.sections.map(s => s.id === sectionId ? { ...s, title } : s)
     }));
@@ -193,22 +158,20 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const addQuestion = (sectionId: string) => {
     const newQuestion = createQuestion('short');
-    updateFormData(prev => ({
+    setFormData(prev => ({
       ...prev,
       sections: prev.sections.map(s => 
         s.id === sectionId ? { ...s, questions: [...s.questions, newQuestion] } : s
       )
     }));
-    
-    // Navigate to the new question
-    const updatedAllQuestions = formData.sections.flatMap(section => 
-      section.questions.map(q => ({ ...q, sectionId: section.id, sectionTitle: section.title }))
+    const currentAllQuestions = formData.sections.flatMap(section => 
+      section.questions.map(q => ({ ...q, sectionId: section.id }))
     );
-    setCurrentSlide(updatedAllQuestions.length);
+    setCurrentSlide(currentAllQuestions.length);
   };
 
   const deleteQuestion = (sectionId: string, questionId: string) => {
-    updateFormData(prev => ({
+    setFormData(prev => ({
       ...prev,
       sections: prev.sections.map(s => 
         s.id === sectionId 
@@ -223,7 +186,7 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   const updateQuestion = (sectionId: string, questionId: string, updates: Partial<Question>) => {
-    updateFormData(prev => ({
+    setFormData(prev => ({
       ...prev,
       sections: prev.sections.map(s =>
         s.id === sectionId
@@ -239,17 +202,23 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   const changeQuestionType = (sectionId: string, questionId: string, newType: Question['type']) => {
-    const oldQuestion = allQuestions.find(q => q.id === questionId);
-    if (!oldQuestion) return;
-    
-    const newQuestion = createQuestion(newType);
-    updateQuestion(sectionId, questionId, {
-      ...newQuestion,
-      id: oldQuestion.id,
-      label: oldQuestion.label,
-      required: oldQuestion.required
+    setFormData(prev => {
+      const newSections = prev.sections.map(section => {
+        if (section.id !== sectionId) return section;
+        const newQuestions = section.questions.map(question => {
+          if (question.id !== questionId) return question;
+          const newQuestionData = createQuestion(newType);
+          return {
+            ...newQuestionData,
+            id: question.id,
+            label: question.label,
+            required: question.required
+          };
+        });
+        return { ...section, questions: newQuestions };
+      });
+      return { ...prev, sections: newSections };
     });
-    setDropdownOpen(false);
   };
 
   const nextSection = () => {
@@ -276,18 +245,16 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
-  // Show section view if no questions or if navigating by sections
   const showSectionView = !currentQuestion || (currentSection && currentSection.questions.length === 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
-      {/* Header */}
       <div className="bg-white/90 backdrop-blur-sm border-b border-neutral-200/50 px-6 py-1.5">
         <div className="flex justify-between items-center h-10">
           <div>
             <input
               value={formData.title}
-              onChange={(e) => updateFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               className="text-base font-black bg-transparent border-none outline-none placeholder:text-neutral-400 text-neutral-800"
               style={{ fontWeight: '900' }}
               placeholder="Assessment Title"
@@ -295,7 +262,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
           
           <div className="flex gap-2 items-center">
-            {/* Preview/JSON Slider */}
             <div className="flex items-center bg-neutral-100 rounded-lg p-1">
               {['preview', 'json'].map(tab => (
                 <button
@@ -313,17 +279,14 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
               ))}
             </div>
             <PublishToggle savedAssessmentId={savedAssessmentId}/>
-
             <AssessmentPicker
               jobId={jobId}
               onSelect={({ id, data }) => {
-                setSavedAssessmentId(id);  // this is needed for PublishToggle
-                setFormData(data);         // load the picked form
+                setSavedAssessmentId(id);
+                setFormData(data);
               }}
-            ></AssessmentPicker>
-
+            />
             <Kiko setFormData={setFormData} title={formData.title} jobId={formData.jobId} setSavedAssessmentId={setSavedAssessmentId}/>
-            
             <Button
               onClick={handleSave}
               disabled={saving}
@@ -331,13 +294,11 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             </Button>
-
           </div>
         </div>
       </div>
 
       <div className="flex h-screen">
-        {/* Builder */}
         <div className="w-1/2 p-4 bg-white/50 backdrop-blur-sm border-r border-neutral-200/60 overflow-y-auto">
           <div className="mb-4">
             <h2 className="text-xl font-medium bg-gradient-to-r from-neutral-700 to-neutral-600 bg-clip-text text-transparent mb-3">Assessment Builder</h2>
@@ -356,7 +317,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                 )}
               </div>
               
-              {/* Section Navigation */}
               <div className="flex gap-1">
                 <button
                   onClick={prevSection}
@@ -379,7 +339,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
 
           <div className="bg-white/90 backdrop-blur-sm border border-neutral-200/60 rounded-xl p-4 shadow-lg shadow-neutral-900/5 bg-gradient-to-br from-white to-neutral-50/50">
-            {/* Section Header */}
             <div className="mb-4 p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-lg border border-blue-100/60">
               <div className="flex items-center justify-between">
                 {editingSectionId === currentSection?.id ? (
@@ -433,7 +392,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
 
             {showSectionView ? (
-              /* Section View - when no questions */
               <div className="text-center py-8">
                 <p className="text-neutral-500 mb-4 font-light text-sm">
                   {currentSection?.questions.length === 0 
@@ -460,7 +418,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
               </div>
             ) : (
-              /* Question Editor */
               <>
                 <div className="space-y-4">
                   <div className="flex justify-between items-start">
@@ -481,35 +438,17 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium mb-2 text-neutral-700">Question Type</label>
-                      {/* Custom Dropdown */}
-                      <div className="relative">
-                        <button
-                          onClick={() => setDropdownOpen(!dropdownOpen)}
-                          className="w-full p-3 border border-neutral-300 rounded-lg bg-white/80 backdrop-blur-sm text-left flex items-center justify-between hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all text-sm"
-                        >
-                          <span className="text-neutral-900">
-                            {questionTypes.find(t => t.value === currentQuestion.type)?.label}
-                          </span>
-                          <ChevronDown size={14} className={`text-neutral-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        
-                        {dropdownOpen && (
-                          <div className="absolute z-10 w-full mt-1 bg-white/95 backdrop-blur-sm border border-neutral-200 rounded-lg shadow-lg">
-                            {questionTypes.map((type) => (
-                              <button
-                                key={type.value}
-                                onClick={() => changeQuestionType(currentQuestion.sectionId, currentQuestion.id, type.value as Question['type'])}
-                                className="w-full px-3 py-2 text-left hover:bg-neutral-50 flex items-center justify-between group first:rounded-t-lg last:rounded-b-lg transition-colors text-sm"
-                              >
-                                <span className="text-neutral-900">{type.label}</span>
-                                {currentQuestion.type === type.value && (
-                                  <Check size={14} className="text-blue-600" />
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <select
+                        value={currentQuestion.type}
+                        onChange={(e) => changeQuestionType(currentQuestion.sectionId, currentQuestion.id, e.target.value as Question['type'])}
+                        className="w-full p-3 border border-neutral-300 rounded-lg bg-white text-sm"
+                      >
+                        <option value="short">Short Text</option>
+                        <option value="long">Long Text</option>
+                        <option value="single">Single Choice</option>
+                        <option value="multi">Multiple Choice</option>
+                        <option value="numeric">Numeric</option>
+                      </select>
                     </div>
                     
                     <div className="flex items-center pt-6">
@@ -525,7 +464,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                     </div>
                   </div>
 
-                  {/* Type-specific fields */}
                   {currentQuestion.type === 'long' && (
                     <div>
                       <label className="block text-xs font-medium mb-2 text-neutral-700">Maximum Characters</label>
@@ -547,9 +485,7 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                       <textarea
                         value={(currentQuestion as any).options?.join('\n') || ''}
                         onChange={(e) => {
-                          // Split by newlines but preserve empty strings to allow typing
                           const lines = e.target.value.split('\n');
-                          // Only filter out completely empty lines at the end, not in the middle
                           const options = lines.length === 1 && lines[0] === '' ? [] : lines;
                           updateQuestion(currentQuestion.sectionId, currentQuestion.id, { options });
                         }}
@@ -590,7 +526,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                   )}
                 </div>
 
-                {/* Question Navigation */}
                 <div className="flex justify-between items-center mt-6 pt-4 border-t border-neutral-200">
                   <button
                     onClick={prevQuestion}
@@ -633,7 +568,6 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         </div>
 
-        {/* Preview/JSON */}
         <div className="w-1/2 p-4 overflow-y-auto bg-gradient-to-br from-neutral-900 to-black">
           <div className="mb-4">
             <h2 className="text-lg font-light mb-2 text-white/90">
@@ -650,17 +584,8 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
               code={JSON.stringify(formData, null, 2)}
             />
           )}
-
         </div>
       </div>
-      
-      {/* Click outside to close dropdown */}
-      {dropdownOpen && (
-        <div 
-          className="fixed inset-0 z-5" 
-          onClick={() => setDropdownOpen(false)}
-        />
-      )}
     </div>
   );
 };
