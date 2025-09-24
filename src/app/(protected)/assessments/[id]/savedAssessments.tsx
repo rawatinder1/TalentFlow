@@ -28,7 +28,7 @@ export function AssessmentPicker({
   onSelect,
 }: {
   jobId: number
-  onSelect: (data: any) => void
+  onSelect: (assessment: { id: string; data: any }) => void
 }) {
   const [assessments, setAssessments] = useState<AssessmentRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,6 +39,7 @@ export function AssessmentPicker({
         const res = await fetch(`/mock/assessments?jobId=${jobId}`)
         const data = await res.json()
         setAssessments(data)
+        
       } catch (err) {
         console.error("Failed to fetch assessments", err)
       } finally {
@@ -96,7 +97,7 @@ export function AssessmentPicker({
             {assessments.map((a) => (
               <DropdownMenuItem
                 key={a.id}
-                onSelect={() => onSelect(a.data)}
+                onSelect={() => onSelect({ id: a.id, data: a.data })}
                 className="
                   text-white/80 hover:text-white
                   hover:bg-neutral-700/50

@@ -14,9 +14,11 @@ interface KikoProps {
   setFormData: (data: any) => void;
   jobId: string;
   title: string;
+  setSavedAssessmentId:  React.Dispatch<React.SetStateAction<string>>; 
+
 }
 
-const Kiko: React.FC<KikoProps> = ({ setFormData, jobId, title }) => {
+const Kiko: React.FC<KikoProps> = ({ setFormData, jobId, title ,setSavedAssessmentId}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -26,7 +28,7 @@ const Kiko: React.FC<KikoProps> = ({ setFormData, jobId, title }) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={() => setIsOpen(true)} // 👈 only opens modal
+                onClick={() => {setIsOpen(true);setSavedAssessmentId("")}} // 👈 only opens modal
                 variant="default"
                 size="default"
                 className="

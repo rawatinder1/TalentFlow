@@ -31,14 +31,27 @@ export interface Assessment {
   id: string;            // Dexie auto-incremented id
   jobId: number;          // index field
   data: any;              // raw JSON blob
+  published: boolean; 
 }
 
 //  Dexie DB class setup here
-
+export interface CandidateResponses {
+  id: string; 
+  assessmentId: string; // link to published assessment
+  jobId: string; // link to job
+  candidateInfo: {
+    name: string;
+    email: string;
+  };
+  submittedAt: string; 
+  responses: Record<string, any>; 
+}
 export class TalentFlowDB extends Dexie {
   jobs!: Table<Job, number>
   candidates!: Table<Candidate, string> 
-  assessments!: Table<Assessment, number>
+  assessments!: Table<Assessment, string>
+  responses!: Table<CandidateResponses, string>   
+
 
   constructor() {
     super("TalentFlowDB")
@@ -46,8 +59,12 @@ export class TalentFlowDB extends Dexie {
     this.version(1).stores({
       jobs: "++id, title, slug, status, order, *tags", 
       candidates: "id, name, email, jobId, stage", 
-      assessments: "++id, jobId",           
+      assessments: "id, jobId",   
+ 
     })
+    this.version(2).stores({
+      responses: "id, assessmentId, jobId", // new table only
+    });
   }
 }
 

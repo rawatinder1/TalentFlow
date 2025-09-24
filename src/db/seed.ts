@@ -13,6 +13,7 @@ export function toSlug(input: string): string {
     .replace(/--+/g, "-");        
 }
 
+
 export function generateJobs(count = 25): Job[] {
   //@ts-ignore
   return Array.from({ length: count }, (_, i) => {

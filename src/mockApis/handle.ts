@@ -2,6 +2,7 @@ import { http, HttpResponse, PathParams } from "msw";
 import { db, Job } from "@/db/schema";
 import { v4 as uuidv4 } from "uuid";
 import { parseAppSegmentConfig } from "next/dist/build/segment-config/app/app-segment-config";
+import { CandidateResponses } from "@/db/schema";
 interface Candidate {
   id?: string;
   name: string;
@@ -258,45 +259,40 @@ export const handlers = [
 
   // PUT /jobs/:id → update job (unchanged)
   //@ts-ignore
-  http.put<JobParams>("/mock/jobs/:id", async ({ params, request }): Promise<HttpResponse> => {
-    try {
-      const id = Number(params.id);
-      
-      if (isNaN(id)) {
-        return errorResponse("Invalid job ID", 400);
-      }
+http.put<JobParams>("/mock/jobs/:id/toggle-status", async ({ params }): Promise<HttpResponse> => {
+  try {
+    const id = Number(params.id);
 
-      let updates: Partial<Job>;
-      
-      try {
-        updates = await request.json() as Partial<Job>;
-      } catch {
-        return errorResponse("Invalid JSON payload", 400);
-      }
-
-      const existingJob = await db.jobs.get(id);
-      if (!existingJob) {
-        return errorResponse("Job not found", 404);
-      }
-
-      const updateData = {
-        ...updates,
-        updatedAt: new Date(),
-      };
-
-      await db.jobs.update(id, updateData);
-      const updatedJob = await db.jobs.get(id);
-
-      if (!updatedJob) {
-        return errorResponse("Failed to retrieve updated job", 500);
-      }
-
-      return successResponse<Job>(updatedJob);
-    } catch (error) {
-      console.error("Failed to update job:", error);
-      return errorResponse("Failed to update job", 500);
+    if (isNaN(id)) {
+      return errorResponse("Invalid job ID", 400);
     }
-  }),
+
+    const existingJob = await db.jobs.get(id);
+    if (!existingJob) {
+      return errorResponse("Job not found", 404);
+    }
+
+    // Toggle the status
+    const newStatus: Job["status"] = existingJob.status === "active" ? "archived" : "active";
+
+    const updateData: Partial<Job> = {
+      status: newStatus,
+      updatedAt: new Date(),
+    };
+
+    await db.jobs.update(id, updateData);
+
+    const updatedJob = await db.jobs.get(id);
+    if (!updatedJob) {
+      return errorResponse("Failed to retrieve updated job", 500);
+    }
+
+    return successResponse<Job>(updatedJob);
+  } catch (error) {
+    console.error("Failed to update job status:", error);
+    return errorResponse("Failed to update job status", 500);
+  }
+}),
 
   // DELETE /jobs/:id → remove job (unchanged)
   //@ts-ignore
@@ -511,7 +507,8 @@ http.post("/mock/assessments", async ({ request }) => {
     const id = await db.assessments.add({
       id: uuidv4(),
       jobId: Number(body.jobId), 
-      data: body.data,           // data has type any to insert ->raw JSON blob
+      data: body.data,           
+      published:false,
     });
 
     return new HttpResponse(
@@ -529,7 +526,7 @@ http.post("/mock/assessments", async ({ request }) => {
     );
   }
 }),
-/** api endpoint to fetch all saved assessment per job i am using  jobid from body to retrive assessments for that job */
+/** api endpoint to fetch all saved assessment per job i am using  jobid from body to retrive assessments for that job **/
 
 
 http.get("/mock/assessments", async ({ request }) => {
@@ -567,5 +564,60 @@ http.get("/mock/assessments", async ({ request }) => {
     );
   }
 }),
+http.put("/mock/assessments/:id/publish", async ({ params }) => {
+  const id = (params.id) as string;
+  
+
+  const existing = await db.assessments.get(id);
+  if (!existing) {
+    return errorResponse("Assessment not found", 404);
+  }
+
+  const updated = {
+    ...existing,
+    published: !existing.published,
+  };
+
+  await db.assessments.put(updated);
+
+  return successResponse({
+    ...updated,
+    link: updated.published ? `/published/${updated.id}` : null,
+  });
+}),
+http.get("/mock/assessments/:id", async ({ params }) => {
+  const id = params.id as string;
+  const assessment = await db.assessments.get(id);
+
+  if (!assessment) {
+    return errorResponse("Assessment not found", 404);
+  }
+
+  return successResponse(assessment);
+}),
+http.post("/mock/responses", async ({ request }) => {
+  try {
+    const body = await request.json() as CandidateResponses;
+
+    if (!body.assessmentId || !body.jobId) {
+      return errorResponse("Missing assessmentId or jobId", 400);
+    }
+
+    const id = `response_${Date.now()}`;
+    const responseRecord: CandidateResponses = {
+      ...body,
+      id,
+      submittedAt: new Date().toISOString(),
+    };
+
+    await db.responses.add(responseRecord);
+
+    return successResponse(responseRecord, 201);
+  } catch (err) {
+    console.error("Failed to save response:", err);
+    return errorResponse("Failed to save response", 500);
+  }
+}),
+
 
 ];

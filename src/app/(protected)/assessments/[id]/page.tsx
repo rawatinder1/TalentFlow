@@ -4,6 +4,7 @@ import { Plus, Trash2, Eye, Code, ChevronLeft, ChevronRight, Edit2, ChevronDown,
 import FormPreview, { Question, Section, FormData } from './FormPreview';
 import { Button }  from '@/components/ui/button';
 import { CodeBlock } from '@/components/ui/code-block';
+import PublishToggle from './publisher';
 import  Kiko  from "./kiko"
 import {AssessmentPicker} from './savedAssessments'
 const generateUUID = () => {
@@ -76,6 +77,7 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionInput, setSectionInput] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [savedAssessmentId, setSavedAssessmentId]=useState("");
 
   const [saving, setSaving] = useState(false);
     
@@ -96,6 +98,8 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
         }
 
         const data = await res.json();
+        setSavedAssessmentId(data.id);
+
 
       } catch (err) {
         console.error("Failed to save assessment:", err);
@@ -308,13 +312,17 @@ const FormBuilder = ({ params }: { params: Promise<{ id: string }> }) => {
                 </button>
               ))}
             </div>
-            
+            <PublishToggle savedAssessmentId={savedAssessmentId}/>
+
             <AssessmentPicker
               jobId={jobId}
-              onSelect={(data) => setFormData(data)}
-            />
-            
-            <Kiko setFormData={setFormData} title={formData.title} jobId={formData.jobId}/>
+              onSelect={({ id, data }) => {
+                setSavedAssessmentId(id);  // this is needed for PublishToggle
+                setFormData(data);         // load the picked form
+              }}
+            ></AssessmentPicker>
+
+            <Kiko setFormData={setFormData} title={formData.title} jobId={formData.jobId} setSavedAssessmentId={setSavedAssessmentId}/>
             
             <Button
               onClick={handleSave}

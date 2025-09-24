@@ -60,6 +60,56 @@ function useThrottledSearch(initialValue: string, delay: number = 500) {
   return [displayValue, searchValue, setDisplayValue] as const;
 }
 
+// Status Toggle Component
+const StatusToggle = React.memo(({ 
+  job, 
+  onToggle, 
+  isToggling 
+}: { 
+  job: Job; 
+  onToggle: (jobId: number) => void;
+  isToggling: boolean;
+}) => {
+  const isActive = job.status === 'active';
+  
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle(job.id);
+      }}
+      disabled={isToggling}
+      className={`
+        relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
+        ${isActive 
+          ? 'bg-green-500 focus:ring-green-500' 
+          : 'bg-gray-300 focus:ring-gray-400'
+        }
+        ${isToggling ? 'cursor-not-allowed' : 'cursor-pointer'}
+      `}
+      title={`${isActive ? 'Archive' : 'Activate'} job`}
+    >
+      <span className="sr-only">
+        {isActive ? 'Archive job' : 'Activate job'}
+      </span>
+      <span
+        className={`
+          inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out shadow-sm
+          ${isActive ? 'translate-x-6' : 'translate-x-1'}
+        `}
+      >
+        {isToggling && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+      </span>
+    </button>
+  );
+});
+
+StatusToggle.displayName = "StatusToggle";
+
 // Separate component for search input to prevent filter section re-renders
 const SearchInput = React.memo(({ 
   value, 
@@ -286,15 +336,19 @@ const JobsTable = React.memo(({
   loading, 
   currentPage, 
   pageSize, 
+  togglingJobIds,
   onDragEnd,
-  onNavigateToKanban
+  onNavigateToKanban,
+  onToggleStatus
 }: {
   jobs: Job[];
   loading: boolean;
   currentPage: number;
   pageSize: number;
+  togglingJobIds: Set<number>;
   onDragEnd: (result: DropResult) => void;
   onNavigateToKanban: (jobId: number) => void;
+  onToggleStatus: (jobId: number) => void;
 }) => {
   return (
     <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg border border-green-200 overflow-hidden relative">
@@ -346,13 +400,20 @@ const JobsTable = React.memo(({
                         </td>
                         <td className="p-3">{job.title}</td>
                         <td className="p-3">
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                            job.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {job.status}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <StatusToggle 
+                              job={job}
+                              onToggle={onToggleStatus}
+                              isToggling={togglingJobIds.has(job.id)}
+                            />
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                              job.status === 'active' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {job.status}
+                            </span>
+                          </div>
                         </td>
                         <td className="p-3">
                           <div className="flex flex-wrap gap-1">
@@ -413,6 +474,7 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [togglingJobIds, setTogglingJobIds] = useState<Set<number>>(new Set());
   
   // Filter states
   const [filters, setFilters] = useState<Filters>({
@@ -496,6 +558,51 @@ export default function JobsPage() {
       setLoading(false);
     }
   }, [buildQueryString]);
+
+  // Handle status toggle
+  const handleToggleStatus = useCallback(async (jobId: number) => {
+    // Add job ID to toggling set
+    setTogglingJobIds(prev => new Set(prev).add(jobId));
+    
+    try {
+      const response = await fetch(`/mock/jobs/${jobId}/toggle-status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle job status');
+      }
+
+      const updatedJob: Job = await response.json();
+      
+      // Update the job in the local state
+      setJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.id === jobId ? { ...job, status: updatedJob.status, updatedAt: updatedJob.updatedAt } : job
+        )
+      );
+
+      // Optional: Show success message
+      console.log(`Job ${jobId} status toggled to ${updatedJob.status}`);
+      
+    } catch (error) {
+      console.error('Error toggling job status:', error);
+      
+      // Optional: Show error message to user
+      // You could add a toast notification here
+      alert('Failed to update job status. Please try again.');
+    } finally {
+      // Remove job ID from toggling set
+      setTogglingJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
+    }
+  }, []);
 
   // Initial load and filter changes (excluding search which is handled separately)
   useEffect(() => {
@@ -629,8 +736,10 @@ export default function JobsPage() {
         loading={loading}
         currentPage={currentPage}
         pageSize={pageSize}
+        togglingJobIds={togglingJobIds}
         onDragEnd={handleDragEnd}
         onNavigateToKanban={handleNavigateToKanban}
+        onToggleStatus={handleToggleStatus}
       />
 
       {/* Pagination */}

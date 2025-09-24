@@ -1,6 +1,6 @@
 "use client";
 //@ts-ignore
-import { Users, Briefcase, FileText, Search, Clock, Target, TrendingUp, Award } from "lucide-react";
+import { Users, Briefcase, FileText, Search, Clock, Target, TrendingUp, Award, Brain, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -101,20 +101,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="container mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-          <div className="text-center group">
-            <div className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">1000+</div>
-            <div className="text-gray-400 text-lg">Candidates Managed</div>
+      {/* AI Power Section */}
+      <section id="ai-power" className="container mx-auto px-6 py-24">
+        <div className="relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100/10 text-gray-300 mb-6 border border-gray-600/20 backdrop-blur-sm">
+              <Brain className="w-4 h-4 mr-2" />
+              Powered by AI
+            </div>
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">Meet Kiko AI: Your Assessment Architect</h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+              Transform how you create evaluations with conversational AI that understands your hiring needs.
+            </p>
           </div>
-          <div className="text-center group">
-            <div className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-3">25+</div>
-            <div className="text-gray-400 text-lg">Active Job Postings</div>
-          </div>
-          <div className="text-center group">
-            <div className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">10+</div>
-            <div className="text-gray-400 text-lg">Assessment Types</div>
+
+          <div className="max-w-4xl mx-auto bg-gray-900/40 rounded-2xl border border-gray-700/30 p-8 backdrop-blur-sm">
+            <div className="flex items-start space-x-6 mb-8">
+              <div className="w-12 h-12 bg-gray-100/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-600/20">
+                <Brain className="w-6 h-6 text-gray-300" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-semibold text-white mb-6">How Kiko AI Works</h3>
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-7 h-7 bg-gray-100/10 rounded-lg flex items-center justify-center text-gray-300 font-medium text-sm flex-shrink-0 border border-gray-600/20">1</div>
+                    <p className="text-gray-300 leading-relaxed pt-1"><span className="text-white font-medium">Describe Your Needs:</span> "I need a technical assessment for senior React developers"</p>
+                  </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="w-7 h-7 bg-gray-100/10 rounded-lg flex items-center justify-center text-gray-300 font-medium text-sm flex-shrink-0 border border-gray-600/20">2</div>
+                    <p className="text-gray-300 leading-relaxed pt-1"><span className="text-white font-medium">AI Generates:</span> Comprehensive questions covering hooks, performance, testing, and architecture</p>
+                  </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="w-7 h-7 bg-gray-100/10 rounded-lg flex items-center justify-center text-gray-300 font-medium text-sm flex-shrink-0 border border-gray-600/20">3</div>
+                    <p className="text-gray-300 leading-relaxed pt-1"><span className="text-white font-medium">Review & Deploy:</span> Fine-tune and launch your assessment in minutes, not hours</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/40 rounded-xl p-6 border border-gray-700/20">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-6 h-6 bg-gray-100/10 rounded-lg flex items-center justify-center border border-gray-600/20">
+                  <Sparkles className="w-4 h-4 text-gray-300" />
+                </div>
+                <span className="text-gray-200 font-medium">AI in Action</span>
+              </div>
+              <p className="text-gray-400 mb-4 leading-relaxed">
+                "Kiko, create an assessment for a marketing manager role focusing on campaign strategy and analytics"
+              </p>
+              <div className="p-4 bg-gray-100/5 rounded-lg border border-gray-600/10">
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Generated 15 targeted questions covering campaign planning, ROI analysis, A/B testing, and team leadership in under 30 seconds.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -196,7 +236,7 @@ export default function Home() {
               </li>
               <li className="flex items-center space-x-3 text-gray-300">
                 <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                <span>Auto-save with progress persistence</span>
+                <span>Kiko AI bot that auto generates assessments as you describe it to him</span>
               </li>
             </ul>
           </div>
