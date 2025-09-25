@@ -15,7 +15,6 @@ interface AssessmentPayload {
   jobId: number;
   data: any;
 }
-// Types for pagination and filtering
 interface PaginationResponse<T> {
   data: T[];
   pagination: {
@@ -57,7 +56,7 @@ const applyFilters = (jobs: Job[], filters: JobFilters): Job[] => {
     filtered = filtered.filter(job => job.status === filters.status);
   }
 
-  // Filter by search term (title or slug)
+  // Filter by searchterm(title or slug)
   if (filters.search) {
     const searchTerm = filters.search.toLowerCase();
     filtered = filtered.filter(job => 
@@ -151,7 +150,7 @@ export const handlers = [
       // Apply pagination
       const paginatedResult = paginate(sortedJobs, page, limit);
 
-      // Add small delay to simulate network latency
+      //  delay to simulate network latency
       await new Promise(resolve => setTimeout(resolve, 300));
 
       return successResponse(paginatedResult);
@@ -163,7 +162,7 @@ export const handlers = [
   //@ts-ignore
   http.get("/mock/jobs/count", async (): Promise<HttpResponse> => {
   try {
-    // Get total count from database
+    
     const totalJobs = await db.jobs.count();
     
     // Add small delay to simulate network latency
@@ -365,7 +364,7 @@ http.put<JobParams>("/mock/jobs/:id/toggle-status", async ({ params }): Promise<
       // Fetch all candidates for this job
       const candidates = await db.candidates.where("jobId").equals(id).toArray()
 
-      // Simulate delay
+      // delay
       await new Promise((res) => setTimeout(res, 300))
 
       return successResponse({
@@ -404,10 +403,9 @@ http.put<JobParams>("/mock/jobs/:id/toggle-status", async ({ params }): Promise<
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
         
-        // Get paginated results
         const paginatedCandidates = candidates.slice(startIndex, endIndex);
         
-        // Simulate network delay (corrected syntax)
+        //  network delay 
         await new Promise(resolve => setTimeout(resolve, 500));
         
         return HttpResponse.json({
@@ -443,7 +441,6 @@ http.put<JobParams>("/mock/jobs/:id/toggle-status", async ({ params }): Promise<
       return errorResponse("Candidate not found", 404)
     }
 
-    // slapping ts-ignore cause i know better than TS.
     
     if (body.stage) {
       //@ts-ignore
@@ -509,7 +506,7 @@ http.post("/mock/candidates", async ({ request }) => {
     //@ts-ignore
     await db.candidates.add(newCandidate)
 
-    // Simulate API delay of 400ms.
+    // delay
     await new Promise((res) => setTimeout(res, 400))
     console.log("successfully reached the create candidate mock api", newCandidate)
     return successResponse(newCandidate, 201)

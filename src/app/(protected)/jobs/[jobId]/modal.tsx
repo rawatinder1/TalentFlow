@@ -13,7 +13,6 @@ const HelpModal: React.FC = () => {
 
   return (
     <>
-      {/* Help Button */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -26,7 +25,6 @@ const HelpModal: React.FC = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -43,7 +41,6 @@ const HelpModal: React.FC = () => {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="relative w-full max-w-md rounded-2xl border backdrop-blur-xl shadow-2xl bg-white/95 border-gray-300/60"
           >
-            {/* Animated background elements */}
             <div className="absolute inset-0 overflow-hidden rounded-2xl">
               <motion.div
                 initial={{ x: -50, opacity: 0 }}

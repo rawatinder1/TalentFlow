@@ -11,12 +11,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       if (typeof window === "undefined") return;
 
       try {
-        // First, start MSW
+        //  start MSW
         const { worker } = await import("@/mockApis/browser");
         await worker.start({ onUnhandledRequest: "bypass" });
         console.log("[MSW] Worker started ");
 
-        // Then seed the database
+        // seeding  the database
         console.log("[INIT] Starting database seed...");
         await seedDatabase();
         console.log("[INIT] Database seed completed");
@@ -24,7 +24,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         setIsInitialized(true);
       } catch (error) {
         console.error("[INIT] Initialization failed:", error);
-        // Still set initialized to true so the app doesn't hang
         setIsInitialized(true);
       }
     };
@@ -32,7 +31,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     initializeApp();
   }, []);
 
-  // Optional: Show loading state while initializing
   if (!isInitialized) {
     return (
       <div style={{ 

@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Debug your API key
 console.log("GOOGLE_GEMINI_API_KEY exists:", !!process.env.GOOGLE_GEMINI_API_KEY);
 console.log("API Key first 10 chars:", process.env.GOOGLE_GEMINI_API_KEY?.substring(0, 10));
 

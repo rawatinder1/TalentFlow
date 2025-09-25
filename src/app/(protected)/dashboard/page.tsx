@@ -254,7 +254,7 @@ const RecruitmentDashboard = () => {
               );
             })}
             
-            {/* Rejected candidates */}
+            {/* rejected candidates */}
             {rejectedCount > 0 && (
               <div className="relative pt-3 border-t border-gray-100">
                 <div className="flex items-center justify-between mb-2">
@@ -275,7 +275,7 @@ const RecruitmentDashboard = () => {
         </div>
       </div>
 
-      {/* Pipeline Summary */}
+      {/* pipeline Summary */}
       <div className="mt-6 bg-white rounded-lg p-6 shadow-sm border border-gray-100/60">
         <h2 className="text-base font-semibold text-gray-900 mb-4">Pipeline Flow</h2>
         

@@ -585,14 +585,12 @@ export default function JobsPage() {
         )
       );
 
-      // Optional: Show success message
       console.log(`Job ${jobId} status toggled to ${updatedJob.status}`);
       
     } catch (error) {
       console.error('Error toggling job status:', error);
       
-      // Optional: Show error message to user
-      // You could add a toast notification here
+
       alert('Failed to update job status. Please try again.');
     } finally {
       // Remove job ID from toggling set
@@ -683,7 +681,6 @@ export default function JobsPage() {
     return `Showing ${start}-${end} of ${pagination.total} jobs`;
   }, [pagination]);
 
-  // Loading state for initial load
   if (loading && jobs.length === 0) {
     return (
       <div className="p-4 flex items-center justify-center min-h-[200px]">
@@ -703,14 +700,14 @@ export default function JobsPage() {
       {/* Filters Section - Modern Card Design */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Search - Isolated component */}
+        
           <SearchInput 
             value={searchInput}
             onChange={handleSearchChange}
             isSearching={searchInput !== debouncedSearch}
           />
 
-          {/* Other Filters - Isolated component */}
+       
           <FilterControls 
             filters={nonSearchFilters}
             statusOptions={statusOptions}

@@ -166,7 +166,7 @@ const AssessmentHelpModal: React.FC = () => {
                     transition={{ duration: 2, repeat: Infinity }}
                     className="mt-0.5"
                   >
-                    💡
+                    😘
                   </motion.div>
                   <div>
                     <h4 className="font-medium text-xs text-emerald-700">
@@ -179,7 +179,6 @@ const AssessmentHelpModal: React.FC = () => {
                 </div>
               </motion.div>
 
-              {/* CTA */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

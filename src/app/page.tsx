@@ -12,7 +12,7 @@ export default function Home() {
 
   }
   const goToDemo = () => {
-    // Replace with your actual demo link
+    
     window.location.href = "https://www.loom.com/share/0bf20eff27f2444ab84e37696ae205f6?sid=26a16864-07dd-4c2e-95b4-6c6e3b7b6d23";
   };
 
@@ -39,9 +39,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* kiko Section */}
       <section className="container mx-auto px-6 py-24 text-center relative overflow-hidden">
-        {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5 rounded-full blur-3xl"></div>
         
         <div className="relative z-10">
@@ -57,7 +56,6 @@ export default function Home() {
                   TalentFlow
                 </span>
 
-                {/* Torch lines directly under text */}
                 <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-64 h-8 z-20">
                   <div className="absolute inset-x-8 top-6 bg-gradient-to-r from-transparent via-blue-400 to-transparent h-[2px] w-3/4 blur-sm" />
                   <div className="absolute inset-x-8 top-5 bg-gradient-to-r from-transparent via-blue-400 to-transparent h-px w-3/4" />
@@ -66,7 +64,6 @@ export default function Home() {
                   <div className="absolute inset-x-20 top-6 bg-gradient-to-r from-transparent via-cyan-400 to-transparent h-[2px] w-1/3 blur-sm" />
                 </div>
 
-                {/* Sparkles — pushed further down */}
                 <div
                   className="absolute top-8 mt-8 left-1/2 transform -translate-x-1/2 w-80 h-10 z-5"
                   style={{
@@ -101,7 +98,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* AI Power Section */}
+      {/* AI  Section */}
       <section id="ai-power" className="container mx-auto px-6 py-24">
         <div className="relative z-10">
           <div className="text-center mb-16">
@@ -159,7 +156,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Core Features */}
+      {/* Core Features explained from here */}
       <section id="features" className="container mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">Everything You Need for Hiring</h2>

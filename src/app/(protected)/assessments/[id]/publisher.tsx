@@ -16,7 +16,7 @@ const PublishToggle = ({
   const [copied, setCopied] = useState(false);
 
   const handlePublish = async () => {
-    // Guard rail: Check if assessment is saved
+    // Guard rail
     if (!savedAssessmentId || savedAssessmentId.trim() === '') {
       alert('Please save your assessment before publishing.');
       return;
@@ -61,7 +61,7 @@ const PublishToggle = ({
     setCopied(false);
   };
 
-  // Modal component that will be rendered via portal
+  // Modal component that will be rendered via portal beacause increasing hte z index wasnt working.
   const Modal = () => (
     <div 
       className="fixed inset-0 flex items-center justify-center p-4" 
@@ -89,13 +89,12 @@ const PublishToggle = ({
           </div>
         </div>
 
-        {/* Content */}
+        {/* Contentfor the form here */}
         <div className="p-4">
           <p className="text-xs text-gray-500 mb-3">
             Share your form link:
           </p>
           
-          {/* Link Display */}
           <div className="bg-gray-50 rounded border border-gray-200 overflow-hidden mb-3">
             <div className="flex items-center">
               <div className="flex-1 px-3 py-2">

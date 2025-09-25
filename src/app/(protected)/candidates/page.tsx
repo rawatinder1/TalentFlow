@@ -372,7 +372,6 @@ const CandidatesTable = () => {
 
         {filteredCandidates.length === 0 && !loading && (selectedStage || searchTerm) && (
           <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-4">🔍</div>
             <p>No candidates found matching your filters</p>
             <div className="flex gap-2 justify-center mt-2">
               {selectedStage && (
